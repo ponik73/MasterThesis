@@ -1,0 +1,18 @@
+sequenceDiagram
+    User->>+App: Config file
+    App->>+Download component: Download configuration
+    Download component-->>-App: Models, datasets
+    App->>+Testing component: Testing configuration
+    Testing component->>+MPU: Latency test
+    MPU-->>-Testing component: Latency
+    Testing component->>+MPU: Accuracy test
+    MPU-->>-Testing component: Metrics
+    Testing component-->>-App: Test results
+    App->>+DB: Write results
+    DB-->>-App: Operation result
+    App->>+DB: Data for report
+    DB-->>-App: Data
+    App->>App: Generate report
+    App-->>-User: HTML Report
+
+https://mermaid.live/edit#pako:eNqNUt1KwzAUfpWQW7cXyIWwWdCLFUU3BOlNSE-7QJsTkxNkjL27J-3cj1W0V833d5LDt5cGa5BKRnhP4AwUVrdB95UT_G0ihPnt7c3CeyXu0DW2FY3tYGQZzWSBH65DXQuDvUcHjpS4wLIpBU0W3Wib6uccMx9mlHyZLs5ErUlHoHg1aA2RrGsv55yhyZiJOkeUTxslVpr4pTtBrBi1DA93-GHCUfxX5sIYnv7f0BIoWBN_Cz2tI1MiQEzdt1UUSyVegyW4Zovl2fvoYVzHUTLxF7xj0WBg3mOgaUIWXLoG8B5czoUrV-azLfdFiYd1uRLPAy1nsofQa1tzxfZZXEnaQg-VVPxbQ6Pz1WTlDizVifBl54xUFBLMZMDUbqVqdBf5lDy34qufJ9Rr94Z4PkNtCUM5lnro9uETnwv2HQ
