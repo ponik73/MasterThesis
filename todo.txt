@@ -1,0 +1,7 @@
+System design
+    Database
+        Test Metrics M:N
+    Config
+        Definovat datasety pre konkretny test
+    Report
+        Prva varianta vyhrala

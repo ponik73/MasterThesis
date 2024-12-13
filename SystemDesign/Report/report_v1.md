@@ -21,6 +21,8 @@ Precision
 Recall
 mAP
 
+TODO: add historical results
+
 ### Model `modelName2`
 - task: classification
 - platform: Kaggle
