@@ -1,12 +1,11 @@
 {
     "devices": [
         {
-            "fingerprint": "fingerprint_stored_in_DB_1", // zistit za behu
+            //"fingerprint": "fingerprint_stored_in_DB_1", // zistit za behu
             "uri": "http://10.x.x.x",
             "name": "custom_device_name_1"
         },
         {
-            "fingerprint": "fingerprint_stored_in_DB_2",
             "uri": "http://10.x.x.x",
             "name": "custom_device_name_2"
         }
@@ -15,7 +14,7 @@
         {
             "name": "custom_model_name_1",
             "task": "image_classification",
-            "input_shape": [1,32,32], //Potrebujem to?
+            "input_shape": [1,32,32],
             "platform": {
                 "name": "kaggle",
                 "uri": "tensorflow/efficientnet/tfLite/lite0-fp32"
@@ -54,23 +53,34 @@
             }
         }
     ],
+    "datasets": [
+        {
+            "name": "custom_dataset_name_1",
+            "platform": {
+                "name": "kaggle",
+                "uri": "xx/xxx"
+            }
+        },
+        {
+            "name": "custom_dataset_name_2",
+            "platform": {
+                "name": "kaggle",
+                "uri": "xx/xxx"
+            }
+        }
+    ],
     "runs": [
         // Jeden objekt je jeden test modelu na device
         {
             "device": "custom_device_name_2",
             "model": "custom_model_name_1",
-            "cfg": {
-                "latencySettings": {},
-                "accuracySettings": {}
-            }
+            "dataset": "custom_dataset_name_1"
+            //"datasetPreprocessScript": "path/to/script" // optional
         },
         {
             "device": "custom_device_name_2",
             "model": "custom_model_name_2",
-            "cfg": {
-                "latencySettings": {},
-                "accuracySettings": {}
-            }
+            "dataset": "custom_dataset_name_2"
         }
     ]
 }
