@@ -27,6 +27,29 @@ System
         ...
     Report handler
         ...
+System test
+    Configurations
+        Models, tests
+    Units
+        Configuration handler
+            Configuration parser
+                Assert output
+        Downloader
+            Kaggle
+                Assert output
+            Hugging Face
+                Assert output
+        Model Evaluator
+            Latency evaluator
+                Assert output
+            Accuracy evaluator
+                Assert output
+        Database
+            ...
+            Write results
+            Retrieve past runs
+        Report handler
+            ...
 Thesis text
     Latency testing chapter
     System design chapter
