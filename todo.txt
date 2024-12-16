@@ -1,0 +1,41 @@
+System
+    Configuration handler
+        Configuration parser
+        Downloader configuration
+        Model evaluator configuration
+    Downloader
+        Input handler
+        Kaggle
+            model
+            dataset
+        Hugging Face
+            model
+            dataset
+        Output handler
+    Model Evaluator
+        Input handler
+            Evaluator configuration
+            Models, datasets
+        Latency evaluator
+            ...
+            Results
+        Accuracy evaluator
+            ...
+            Results
+        Output handler
+    Database
+        ...
+    Report handler
+        ...
+Thesis text
+    Latency testing chapter
+    System design chapter
+        System blueprint (Diagrams)
+        Config file
+    Implementation
+        Configuration handler
+        Downloader
+        Model Evaluator
+        Database
+        Report handler
+        
