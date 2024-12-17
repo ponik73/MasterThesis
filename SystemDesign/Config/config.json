@@ -15,58 +15,44 @@
             "name": "custom_model_name_1",
             "task": "image_classification",
             "input_shape": [1,32,32],
-            "platform": {
-                "name": "kaggle",
-                "uri": "tensorflow/efficientnet/tfLite/lite0-fp32"
-            }
+            "platform": "kaggle",
+            "uri": "tensorflow/efficientnet/tfLite/lite0-fp32"
         },
         {
             "name": "custom_model_name_2",
             "task": "image_classification",
-            "platform": {
-                "name": "kaggle",
-                "uri": "tensorflow/efficientnet/TfLite/lite0-fp32/1"
-            }
+            "platform": "kaggle",
+            "uri": "tensorflow/efficientnet/TfLite/lite0-fp32/1"
         },
         {
             "name": "custom_model_name_3",
             "task": "object_detection",
-            "platform": {
-                "name": "hf",
-                "uri": "qualcomm/Yolo-v7-Quantized/blob/main/Yolo-v7-Quantized.tflite"
-            }
+            "platform": "hf",
+            "uri": "qualcomm/Yolo-v7-Quantized/blob/main/Yolo-v7-Quantized.tflite"
         },
         {
             "name": "custom_model_name_4",
             "task": "object_detection",
-            "platform": {
-                "name": "hf",
-                "uri": "qualcomm/Yolo-v7-Quantized/blob/6b1f9f2c8acfc6795362d081f01c53601b0d29fe/Yolo-v7-Quantized.tflite"
-            }
+            "platform": "hf",
+            "uri": "qualcomm/Yolo-v7-Quantized/blob/6b1f9f2c8acfc6795362d081f01c53601b0d29fe/Yolo-v7-Quantized.tflite"
         },
         {
             "name": "custom_model_name_5",
             "task": "image_classification",
-            "platform": {
-                "name": "kaggle",
-                "uri": "tensorflow/efficientnet/TfLite/lite3-uint8"
-            }
+            "platform": "kaggle",
+            "uri": "tensorflow/efficientnet/TfLite/lite3-uint8"
         }
     ],
     "datasets": [
         {
             "name": "custom_dataset_name_1",
-            "platform": {
-                "name": "kaggle",
-                "uri": "xx/xxx"
-            }
+            "platform": "kaggle",
+            "uri": "xx/xxx"
         },
         {
             "name": "custom_dataset_name_2",
-            "platform": {
-                "name": "kaggle",
-                "uri": "xx/xxx"
-            }
+            "platform": "kaggle",
+            "uri": "xx/xxx"
         }
     ],
     "runs": [
