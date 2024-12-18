@@ -1,0 +1,42 @@
+{
+    "devices": [
+        {
+            "name": "name1",
+            "uri": "uri1"
+        },
+        {
+            "uri": "uri2",
+            "name": "name"
+        }
+    ],
+    "models": [
+        {
+            "name": "custom_model_name_1",
+            "task": "image-classification",
+            "input_shape": [1,32,32],
+            "platform": "kaggle",
+            "uri": "tensorflow/efficientnet/tfLite/lite0-fp32"
+        },
+        {
+            "name": "custom_model_name_3",
+            "task": "object-detection",
+            "platform": "hf",
+            "uri": "qualcomm/Yolo-v7-Quantized/blob/main/Yolo-v7-Quantized.tflite",
+            "input_shape": [1,32,32]
+        }
+    ],
+    "datasets": [
+        {
+            "name": "custom_dataset_name_1",
+            "platform": "kaggle",
+            "uri": "xx/xxx"
+        }
+    ],
+    "runs": [
+        {
+            "device": "name1",
+            "model": "custom_model_name_1",
+            "dataset": "custom_dataset_name_1"
+        }
+    ]
+}
