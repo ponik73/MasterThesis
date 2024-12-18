@@ -1,8 +1,9 @@
-supportedPlatforms = [
+supportedModelHubs = [
         "hf",
         "kaggle"
     ]
 
+# Classes representing configuration file objects:
 class Device():
     attributes = ["name", "uri"]
     distinctAttributes = ["name", "uri"]
@@ -24,16 +25,19 @@ class Model():
         self.name = name
         self.uri = uri
 
+        # Input shape must be a list of integers:
         if not isinstance(input_shape, list) or set([isinstance(x, int) for x in input_shape]) != {True}:
             raise ValueError("Input shape must be a list of integers")
         self.inputShape = input_shape
 
+        # Check if given task is supported:
         if task not in self.supportedTasks:
             raise ValueError(f'Task "{task}" is not supported. Supported tasks are: {self.supportedTasks}')
         self.task = task
 
-        if platform not in supportedPlatforms:
-            raise ValueError(f'Platform "{platform}" is not supported. Supported platforms are: {supportedPlatforms}')
+        # Check if given model hub is supported:
+        if platform not in supportedModelHubs:
+            raise ValueError(f'Model hub "{platform}" is not supported. Supported platforms are: {supportedModelHubs}')
         self.platform = platform
         
 class Dataset():
@@ -44,8 +48,9 @@ class Dataset():
         self.name = name
         self.uri = uri
 
-        if platform not in supportedPlatforms:
-            raise ValueError(f'Platform "{platform}" is not supported. Supported platforms are: {supportedPlatforms}')
+        # Check if given model hub is supported:
+        if platform not in supportedModelHubs:
+            raise ValueError(f'Model hub "{platform}" is not supported. Supported platforms are: {supportedModelHubs}')
         self.platform = platform
         
 class Run():
@@ -55,17 +60,3 @@ class Run():
         self.deviceName = device
         self.modelName = model
         self.datasetName = dataset
-
-# Downloader: models, datasets
-# Model: (models, datasets) runs, devices
-
-class DownloaderConfiguration():
-    def __init__(self, models: list[Model], datasets: list[Dataset]):
-        self.models = {
-            supportedPlatforms[0]: [m for m in models if m.platform == supportedPlatforms[0]], # Hugging face
-            supportedPlatforms[1]: [m for m in models if m.platform == supportedPlatforms[1]]  # Kaggle
-        }
-        self.datasets = {
-            supportedPlatforms[0]: [x for x in datasets if x.platform == supportedPlatforms[0]], # Hugging face
-            supportedPlatforms[1]: [x for x in datasets if x.platform == supportedPlatforms[1]]  # Kaggle
-        }
