@@ -1,0 +1,6 @@
+huggingface_hub
+datasets
+
+pillow
+
+python-certifi-win32

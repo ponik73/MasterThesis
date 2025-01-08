@@ -1,3 +1,5 @@
+from pathlib import Path
+
 supportedModelHubs = [
         "hf",
         "kaggle"
@@ -39,6 +41,8 @@ class Model():
         if platform not in supportedModelHubs:
             raise ValueError(f'Model hub "{platform}" is not supported. Supported platforms are: {supportedModelHubs}')
         self.platform = platform
+
+        self.localPath: Path|None = None
         
 class Dataset():
     attributes = ["name", "platform", "uri"]

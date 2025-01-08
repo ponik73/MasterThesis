@@ -1,29 +1,23 @@
 import os
-from configurationHandler.configurations import supportedModelHubs
+import subprocess
+from pathlib import Path
+import tempfile
+from configurationHandler.configurations import supportedModelHubs, Model, Dataset
 
-# Supported operating system - scripts for download are implemented for the operating system
-supportedOS = {
-    "nt" : "Win"
-}
-OS_NAME = os.name
+from huggingface_hub import hf_hub_download
 
 class DownloaderController():
     def __init__(self, cfg: dict):
         try:
             self.cfg = cfg
-            # Determine operating system (host):
-            osName = os.name
-            if osName not in supportedOS.keys():
-                raise Exception(f'Operating system "{osName}" is not supported.')
-            self.osHost = supportedOS[osName]
 
             # Sort models and dataset by platform:
             models = self.sortByModelHub("models")
             datasets = self.sortByModelHub("datasets")
 
             # Create handlers for platforms:
-            self.handlerHf = HandlerHF(models["hf"], datasets["hf"], self.osHost)
-            self.handlerKaggle = HandlerKaggle(models["kaggle"], datasets["kaggle"], self.osHost)
+            self.handlerHf = HandlerHF(models["hf"], datasets["hf"])
+            self.handlerKaggle = HandlerKaggle(models["kaggle"], datasets["kaggle"])
         except Exception as ex:
             raise ex
         
@@ -34,18 +28,47 @@ class DownloaderController():
         return group
     
     def download(self):
+        self.handlerHf.download()
+        # self.handlerKaggle.download()
         return "downloaded Models info", "downloaded Datasets info"
             
 class DownloadHandler():
-    def __init__(self, models, datasets, osHost):
+    def __init__(self, models: list[Model], datasets: list[Dataset]):
         self.models = models
         self.datasets = datasets
-        self.osHost = osHost
+        
+    def download(self):
+        self.downloadModels()
+        # self.downloadDatasets()
 
 class HandlerHF(DownloadHandler):
-    def __init__(self, models, datasets, osHost):
-        super().__init__(models, datasets, osHost)
+    hubName = supportedModelHubs[0]
+
+    def __init__(self, models: list[Model], datasets: list[Dataset]):
+        super().__init__(models, datasets)
+    
+    def _parseModelUri(self, uri: str) -> tuple[str, str, str]:
+        namespace, blob = uri.split("/blob/")
+        revision, filename = blob.split("/")
+        return namespace, filename, revision
+        
+    def downloadModels(self):
+        for m in self.models:
+            namespace, filename, revision = self._parseModelUri(m.uri)
+            try:
+                m.localPath = Path(hf_hub_download(repo_id=namespace, filename=filename, revision=revision))
+            except Exception as ex:
+                m.localPath = None
+                print(f'Model "{m.name}" has invalid uri "{m.uri}"')
+
+    def downloadDataset():
+        #TODO: implement using Datasets.load_dataset(..., streaming=True)
+        pass
     
 class HandlerKaggle(DownloadHandler):
-    def __init__(self, models, datasets, osHost):
-        super().__init__(models, datasets, osHost)
+    hubName = supportedModelHubs[1]
+
+    def __init__(self, models: list[Model], datasets: list[Dataset]):
+        super().__init__(models, datasets)
+    def downloadModels(self):
+        print("Kaggle model download not implemented")

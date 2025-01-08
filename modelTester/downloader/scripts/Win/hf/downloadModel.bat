@@ -1,1 +1,0 @@
-call curl -OL "%1"
