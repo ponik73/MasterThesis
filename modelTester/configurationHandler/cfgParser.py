@@ -36,6 +36,8 @@ class ConfigParser():
                 attributes=Run.attributes,
                 distinctAttributes=Run.distinctAttributes
             )
+
+            self._filterWrtRuns()
         except Exception as ex:
             raise ex
 
@@ -113,9 +115,35 @@ class ConfigParser():
         for attr in attributes:
             if len(set([o.__getattribute__(attr) for o in objects])) != len(objects):
                 raise Exception(f'{groupName} cannot share same {attr}')
+            
+    def _filterWrtRuns(self):
+        # Check if all runs work with valid names:
+        def validRun(r: Run) -> tuple[bool, str]:
+            if not r.modelName in [x.name for x in self.models]:
+                return False, r.modelName
+            if not r.datasetName in [x.name for x in self.datasets]:
+                return False, r.datasetName
+            if not r.deviceName in [x.name for x in self.devices]:
+                return False, r.deviceName
+            return True, ""
+        for r in self.runs:
+            valid, ref = validRun(r)
+            if not valid:
+                self.runs.remove(r)
+                print(f'Run {vars(r)} contains invalid reference `{ref}`')
+
+        # Remove items not mentioned in runs:
+        usedModelNames = set([x.modelName for x in self.runs]) # Names of models used in any run
+        usedDatasetNames = set([x.datasetName for x in self.runs]) # Names of datasets used in any run
+        usedDevicesNames = set([x.deviceName for x in self.runs]) # Names of devices used in any run
+
+        self.models = [x for x in self.models if x.name in usedModelNames] # Filtered models
+        self.datasets = [x for x in self.datasets if x.name in usedDatasetNames] # Filtered datasets
+        self.devices = [x for x in self.devices if x.name in usedDevicesNames] # Filtered devices
 
     def getDownloaderCfg(self) -> dict:
-        """Returns configuration for Downloader component. Dictionary containing parsed models and datasets."""
+        """Returns configuration for Downloader component. Dictionary containing parsed models and datasets (models and datasets defined in `run` only)."""
+        
         return {
             "models": self.models,
             "datasets": self.datasets
