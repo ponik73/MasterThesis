@@ -1,4 +1,5 @@
 from pathlib import Path
+from datasets import Dataset as hfDataset
 
 supportedModelHubs = [
         "hf",
@@ -62,6 +63,8 @@ class Dataset():
         if platform not in supportedModelHubs:
             raise ValueError(f'Model hub "{platform}" is not supported. Supported platforms are: {supportedModelHubs}')
         self.platform = platform
+
+        self.dataset : hfDataset | None = None
         
 class Run():
     attributes = ["device", "model", "dataset"]

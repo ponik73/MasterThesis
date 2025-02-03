@@ -35,6 +35,11 @@ class DownloaderController():
         self.handlerHf.download()
         self.handlerKaggle.download()
         return "downloaded Models info", "downloaded Datasets info"
+    
+    def getItems(self):
+        """Returns downloaded models and datasets
+        """
+        pass
             
 class DownloadHandler():
     def __init__(self, models: list[Model], datasets: list[Dataset]):
@@ -46,9 +51,6 @@ class DownloadHandler():
     def download(self):
         self.downloadModels()
         self.downloadDatasets() #DATASETS WILL BE ONLY LOCAL WITH DEFINED FORMAT - consult
-
-        for m in self.models:
-            print(m.name, m.localPath)
     
     def downloadModels(self):
         for m in self.models:
@@ -66,6 +68,9 @@ class DownloadHandler():
                 ds = self.downloadDatasetFunc(d.uri)
                 if isinstance(ds, hfDatasetDict):
                     ds = ds[next(iter(ds))]
+                if not isinstance(ds, hfDataset):
+                    raise Exception
+                d.dataset = ds
                 print(f'{d.name} loaded')
             except Exception as ex:
                 print(f'Dataset "{d.name}" could not be loaded')
