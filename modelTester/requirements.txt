@@ -1,5 +1,6 @@
 huggingface_hub
 datasets
+kagglehub
 
 pillow
 

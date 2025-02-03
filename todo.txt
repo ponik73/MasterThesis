@@ -1,3 +1,7 @@
+Neviem ako vyriesit nacitavanie datasetov. Rozne formaty, pre rozne tasky:
+    - definovat format pre kazdy task, ktory bude musiet uzivatel dodrzat (moze nakonfigurovat pomocny script pre upravu datasetu)
+    - podporovat X najdolezitejsich formatov pre kazdy task
+###############################################
 System
     Configuration handler
         Configuration parser

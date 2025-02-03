@@ -11,11 +11,32 @@
     ],
     "models": [
         {
-            "name": "custom_model_name_1",
+            "name": "custom_model_name_1_version_main",
             "task": "image-classification",
             "input_shape": [1,32,32],
             "platform": "kaggle",
             "uri": "tensorflow/efficientnet/tfLite/lite0-fp32"
+        },
+        {
+            "name": "custom_model_name_1_version_1",
+            "task": "image-classification",
+            "input_shape": [1,32,32],
+            "platform": "kaggle",
+            "uri": "tensorflow/efficientnet/tfLite/lite0-fp32/1"
+        },
+        {
+            "name": "invalid_model_name_1",
+            "task": "object-detection",
+            "platform": "hf",
+            "uri": "neexistuje/neexistujeDir/blob/main/Yolo-v7-Quantized.tflite",
+            "input_shape": [1,32,32]
+        },
+        {
+            "name": "custom_model_name_2",
+            "task": "image-classification",
+            "platform": "hf",
+            "uri": "Kalray/mobilenet-v1/blob/main/mobilenet-v1-mlperf.tflite",
+            "input_shape": [1,32,32]
         },
         {
             "name": "custom_model_name_3",
@@ -23,20 +44,47 @@
             "platform": "hf",
             "uri": "qualcomm/Yolo-v7-Quantized/blob/main/Yolo-v7-Quantized.tflite",
             "input_shape": [1,32,32]
+        },
+        {
+            "name": "custom_model_name_4",
+            "task": "object-detection",
+            "platform": "hf",
+            "uri": "qualcomm/Yolo-v7-Quantized/blob/6b1f9f2c8acfc6795362d081f01c53601b0d29fe/Yolo-v7-Quantized.tflite",
+            "input_shape": [1,32,32]
         }
     ],
     "datasets": [
         {
-            "name": "custom_dataset_name_1",
+            "name": "miniimagenet_kaggle",
             "platform": "kaggle",
-            "uri": "xx/xxx"
+            "uri": "deeptrial/miniimagenet"
+        },
+        {
+            "name": "imagenet1k_hf",
+            "platform": "hf",
+            "uri": "benjamin-paine/imagenet-1k-128x128"
+        },
+        {
+            "name": "imagenet1k_hf_small",
+            "platform": "hf",
+            "uri": "Multimodal-Fatima/Imagenet1k_sample_train"
+        },
+        {
+            "name": "fastai-imagenet",
+            "platform": "kaggle",
+            "uri": "samrat230599/fastai-imagenet"
         }
     ],
     "runs": [
         {
             "device": "name1",
-            "model": "custom_model_name_1",
-            "dataset": "custom_dataset_name_1"
+            "model": "custom_model_name_3",
+            "dataset": "imagenet1k_hf_small"
+        },
+        {
+            "device": "name1",
+            "model": "custom_model_name_3",
+            "dataset": "fastai-imagenet"
         }
     ]
 }
