@@ -4,6 +4,7 @@ import os
 import argparse
 from configurationHandler.cfgParser import ConfigParser, cfgDesc
 from downloader.controller import DownloaderController
+from modelEvaluator.controller import EvaluatorController
 
 #TODO: Maybe do this as server - request "test" with cfg file; request "report"
 
@@ -31,11 +32,19 @@ if __name__ == "__main__":
     # Configuration for Downloader component:
     configurationDownloader = cfgParser.getDownloaderCfg()
     # Configuration for Model Evaluator component:
-    configurationModelEvaluator = cfgParser.getEvaluatorCfg()
+    devices, runs = cfgParser.getEvaluatorCfg()
 
-    # # Initialize Downloader component:
+    # Initialize Downloader component:
     downloader = DownloaderController(configurationDownloader)
-    m, d = downloader.download()
-    # print(m)
-    # print(d)
+    models, datasets = downloader.download()
+
+    # Model Evaluator - initialization:
+    evaluator = EvaluatorController(
+        devices,
+        runs,
+        models,
+        datasets
+        )
+
+    # Model Evaluator - single run:
 
