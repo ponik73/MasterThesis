@@ -12,25 +12,25 @@ class ConfigParser():
             self.dictCfg = self._readCfg(pathCfg)
 
             # Parse each group:
-            self.devices = self._parseGroup(
+            self.devices : list[Device] = self._parseGroup(
                 groupName="devices",
                 cfgClass=Device,
                 attributes=Device.attributes,
                 distinctAttributes=Device.distinctAttributes
             )
-            self.models = self._parseGroup(
+            self.models : list[Model] = self._parseGroup(
                 groupName="models",
                 cfgClass=Model,
                 attributes=Model.attributes,
                 distinctAttributes=Model.distinctAttributes
             )
-            self.datasets = self._parseGroup(
+            self.datasets : list[Dataset] = self._parseGroup(
                 groupName="datasets",
                 cfgClass=Dataset,
                 attributes=Dataset.attributes,
                 distinctAttributes=Dataset.distinctAttributes
             )
-            self.runs = self._parseGroup(
+            self.runs : list[Run] = self._parseGroup(
                 groupName="runs",
                 cfgClass=Run,
                 attributes=Run.attributes,
@@ -149,13 +149,8 @@ class ConfigParser():
             "datasets": self.datasets
         }
     def getEvaluatorCfg(self):
-        """Returns configuration for Model Evaluator component. Dictionary containing parsed devices, models, datasets, and runs."""
-        return {
-            "devices": self.devices,
-            "models": self.models,
-            "datasets": self.datasets,
-            "runs": self.runs
-        }
+        """Returns configuration for Model Evaluator component (parsed devices and runs)"""
+        return self.devices, self.runs
     
 cfgDesc = """
 Configuration file must contain arrays of objects specified below.

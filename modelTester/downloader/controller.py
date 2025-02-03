@@ -32,14 +32,9 @@ class DownloaderController():
         return group
     
     def download(self):
-        self.handlerHf.download()
-        self.handlerKaggle.download()
-        return "downloaded Models info", "downloaded Datasets info"
-    
-    def getItems(self):
-        """Returns downloaded models and datasets
-        """
-        pass
+        modelsHf, datasetsHf = self.handlerHf.download()
+        modelsKaggle, datasetsKaggle = self.handlerKaggle.download()
+        return [*modelsHf, *modelsKaggle], [*datasetsHf, *datasetsKaggle]
             
 class DownloadHandler():
     def __init__(self, models: list[Model], datasets: list[Dataset]):
@@ -48,9 +43,10 @@ class DownloadHandler():
         self.downloadModelFunc = None
         self.downloadDatasetFunc = None
         
-    def download(self):
+    def download(self) -> tuple[list[Model], list[Dataset]]:
         self.downloadModels()
         self.downloadDatasets() #DATASETS WILL BE ONLY LOCAL WITH DEFINED FORMAT - consult
+        return self.models, self.datasets
     
     def downloadModels(self):
         for m in self.models:
