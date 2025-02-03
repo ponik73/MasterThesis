@@ -1,9 +1,11 @@
 # python modelTester.py --cfg=ahoj
 # python modelTester.py --cfg=../test/configs/first_cfg.json
-
+import os
 import argparse
 from configurationHandler.cfgParser import ConfigParser, cfgDesc
-# from downloader.controller import DownloaderController
+from downloader.controller import DownloaderController
+
+#TODO: Maybe do this as server - request "test" with cfg file; request "report"
 
 argParser = argparse.ArgumentParser()
 argParser.add_argument("--cfg", type=str, action="store", dest="path_cfg", help="Path to config")
@@ -32,8 +34,8 @@ if __name__ == "__main__":
     configurationModelEvaluator = cfgParser.getEvaluatorCfg()
 
     # # Initialize Downloader component:
-    # downloader = DownloaderController(configurationDownloader)
-    # m, d = downloader.download()
+    downloader = DownloaderController(configurationDownloader)
+    m, d = downloader.download()
     # print(m)
     # print(d)
 
