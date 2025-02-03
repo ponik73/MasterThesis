@@ -14,6 +14,12 @@ class Device():
         self.name = name
         self.uri = uri
 
+    def ping():
+        pass
+
+    def getFingerPrint():
+        pass
+
 class Model():
     attributes = ["name", "task", "input_shape", "platform", "uri"]
     distinctAttributes = ["name", "uri"]
