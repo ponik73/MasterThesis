@@ -14,12 +14,7 @@ class Device():
     def __init__(self, name: str, uri: str):
         self.name = name
         self.uri = uri
-
-    def ping():
-        pass
-
-    def getFingerPrint():
-        pass
+        self.fingerprint : str | None = None
 
 class Model():
     attributes = ["name", "task", "input_shape", "platform", "uri"]
