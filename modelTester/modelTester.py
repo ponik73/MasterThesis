@@ -34,17 +34,23 @@ if __name__ == "__main__":
     # Configuration for Model Evaluator component:
     devices, runs = cfgParser.getEvaluatorCfg()
 
+    # TODO: check devices first, then download models
+
     # Initialize Downloader component:
     downloader = DownloaderController(configurationDownloader)
+    print("#"*10 + "\n" + "RETRIEVING DATA FROM MODEL HUBS\n" + "#"*10 + "\n")
     models, datasets = downloader.download()
 
     # Model Evaluator - initialization:
+    print("#"*10 + "\n" + "DISCOVERING DEVICES\n" + "#"*10 + "\n")
     evaluator = EvaluatorController(
         devices,
         runs,
         models,
         datasets
         )
-
-    # Model Evaluator - single run:
+    print("#"*10 + "\n" + "EXECUTING RUNS\n" + "#"*10 + "\n")
+    # Model Evaluator - execute all runs:
+    while not evaluator.finished():
+        evaluator.executeRun()
 

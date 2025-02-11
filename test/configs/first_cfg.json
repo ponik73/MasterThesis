@@ -1,8 +1,8 @@
 {
     "devices": [
         {
-            "name": "name1",
-            "uri": "uri1"
+            "name": "8mp",
+            "uri": "10.171.65.19"
         },
         {
             "uri": "uri2",
@@ -73,18 +73,28 @@
             "name": "fastai-imagenet",
             "platform": "kaggle",
             "uri": "samrat230599/fastai-imagenet"
+        },
+        {
+            "name": "invalid_dataset_1",
+            "platform": "kaggle",
+            "uri": "neexistuje/neexist"
         }
     ],
     "runs": [
         {
-            "device": "name1",
+            "device": "8mp",
             "model": "custom_model_name_3",
             "dataset": "imagenet1k_hf_small"
         },
         {
-            "device": "name1",
+            "device": "8mp",
             "model": "custom_model_name_3",
             "dataset": "fastai-imagenet"
+        },
+        {
+            "device": "8mp",
+            "model": "invalid_model_name_1",
+            "dataset": "invalid_dataset_1"
         }
     ]
 }
