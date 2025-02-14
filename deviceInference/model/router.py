@@ -5,12 +5,12 @@ from starlette import status
 from .config import Settings, get_settings
 from .services import saveModel, emptyModelStorage
 
-model_router = APIRouter(
+modelRouter = APIRouter(
     prefix="/model",
     tags=["model"],
 )
 
-@model_router.post(
+@modelRouter.post(
         "/",
         description="Upload model and save metadata to database."
 )
@@ -25,7 +25,7 @@ async def upload_model(
     return await saveModel(model_file, settings.MODEL_DIR)
 
 
-@model_router.delete(
+@modelRouter.delete(
     "/",
     description="Delete model and all associated metadata.",
     status_code=status.HTTP_204_NO_CONTENT

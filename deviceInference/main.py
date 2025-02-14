@@ -6,7 +6,7 @@ from starlette.requests import Request
 from fastapi.encoders import jsonable_encoder
 from schemas import FingerprintOutput
 
-from model.router import model_router
+from model.router import modelRouter
 
 app = FastAPI(
     summary="REST API for latency and accuracy assessment of neural network models on embedded platforms."
@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(model_router)
+app.include_router(modelRouter)
 
 @app.exception_handler(500)
 async def internal_exception_handler(_: Request, __: Exception) -> JSONResponse:
