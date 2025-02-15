@@ -1,0 +1,6 @@
+venv*/
+.git/
+.vscode/
+Dockerfile
+docker-compose.yaml
+requirements*.txt
