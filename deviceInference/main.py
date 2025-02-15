@@ -7,6 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from schemas import FingerprintOutput
 
 from model.router import modelRouter
+from evaluate.router import evaluateRouter
 
 app = FastAPI(
     summary="REST API for latency and accuracy assessment of neural network models on embedded platforms."
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(modelRouter)
+app.include_router(evaluateRouter)
 
 @app.exception_handler(500)
 async def internal_exception_handler(_: Request, __: Exception) -> JSONResponse:
