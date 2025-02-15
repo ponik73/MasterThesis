@@ -1,39 +1,20 @@
+# Step 1: Use the official Python image as a base
 FROM python:3.11-slim
 
-# Set the working directory
+# Step 2: Set the working directory in the container
 WORKDIR /app
 
-# Copy only pyproject.toml first to leverage Docker cache
-COPY pyproject.toml ./
+# Step 3: Copy the requirements.txt into the container
+COPY requirements.txt .
 
-# Install dependencies
-RUN pip install --no-cache-dir .
+# Step 4: Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application files
-COPY . .
+# Step 5: Copy the FastAPI application into the container
+COPY ./app /app
 
-# Expose the FastAPI default port
+# Step 6: Expose the port that FastAPI will run on (default is 8000)
 EXPOSE 8000
 
-# Command to run the application
+# Step 7: Set the command to run the app using Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# FROM python:3.11-slim
-
-# WORKDIR /app
-
-# FROM base as deps
-
-# COPY pyproject.toml .
-
-# RUN python -m pip install --no-cache-dir pip-tools && \
-#     pip-compile -o requirements.txt pyproject.toml
-
-# FROM base as dev
-
-# COPY --from=deps /app/requirements.txt ./
-# RUN python -m pip install --no-cache-dir -r requirements.txt
-
-# # EXPOSE 8000
-
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
