@@ -43,12 +43,10 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
         response_model=FingerprintOutput
 )
 async def getFingerprint():
-    # TODO: remove. Win debug:
-    cmdResult = subprocess.run('ver', capture_output=True, text=True, shell = True)
-    # cmdResult = subprocess.run('uname -r', capture_output=True, text=True, shell = True)
+    cmdResult = subprocess.run('uname -r', capture_output=True, text=True, shell = True)
 
     if cmdResult.returncode != 0:
-        raise Exception
+        raise Exception #TODO: appropriate exception
 
     return {"fingerprint": cmdResult.stdout}
 

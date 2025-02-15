@@ -13,12 +13,7 @@ async def latencyAssessmentTFlite(
     
     try:
 
-        ############ This is tflite specific (benchmark_model):
-        cmd = f'{latencyExecutablePath.as_posix()} --graph={modelPath.as_posix()}'
-        # assessmentProcess = subprocess.run(f'{latencyExecutablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
-        assessmentProcess = subprocess.run('ver', capture_output=True, text=True, shell = True)
-        #####################################
-        
+        assessmentProcess = subprocess.run(f'{latencyExecutablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)        
 
         if assessmentProcess.returncode != 0 or not assessmentProcess.stdout:
             raise Exception("TODO exceptions.py file (or maybe here) - LatencyAssessmentError")
