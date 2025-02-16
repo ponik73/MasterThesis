@@ -15,14 +15,14 @@ modelRouter = APIRouter(
         description="Upload model and save metadata to database."
 )
 async def upload_model(
-    model_file: Annotated[UploadFile, File(description="Uploaded model file.")],
+    modelFile: Annotated[UploadFile, File(description="Uploaded model file.")],
     settings: Annotated[Settings, Depends(get_settings)]
 ):
     """Upload model and save metadata to database.
 
     :param model_file: Reference to uploaded model file.
     """
-    return await saveModel(model_file, settings.MODEL_DIR)
+    return await saveModel(modelFile, settings.MODEL_DIR)
 
 
 @modelRouter.delete(
