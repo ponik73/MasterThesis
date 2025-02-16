@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     """API global configuration properties."""
 
     MODEL_DIR: Path = Path("./model_storage")
+    TEMP_DIR: Path = Path("./tmp")
     SUPPORTED_FRAMEWORKS: list[str] = ["tflite"]
 
 @lru_cache

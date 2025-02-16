@@ -12,31 +12,31 @@ evaluateRouter = APIRouter(
     tags=["evaluate"]
 )
 
-@evaluateRouter.get(
-    "/",
-    description="Evaluate latency of uploaded model.",
+@evaluateRouter.post(
+    "/latency/tflite",
+    description="Evaluate latency of uploaded TFLite model.",
     response_model=LatencyOutput
 )
 async def evaluateLatency(
-    latencyExecutablePath: str,
+    latencyExecutable: Annotated[UploadFile, File(description="Executable that evaluates latency (e.g. benchmark_model for TFLite).")],
     settings: Annotated[Settings, Depends(get_settings)]
-):
+):    
+    # Check if the model is present in the storage:
     modelPath = checkModelStorage(settings.MODEL_DIR)
     if not modelPath or not modelPath.exists() or not modelPath.is_file():
         raise Exception("TODO exceptions.py file (or maybe here) - NoModelFoundError")
     
-    modelFramework = modelPath.suffix[1:]
-    if modelFramework not in settings.SUPPORTED_FRAMEWORKS:
+    # Check if the model's framework is tflite:
+    if modelPath.suffix != ".tflite":
         raise Exception("TODO exceptions.py file (or maybe here) - MLFramworkNotSupportedError")
 
-    # TODO: Generalization - based on NN framework select framework specific (e.g. latencyAssessmentTFLite) function from services; some mapping
-    serviceFunc = latencyAssessmentTFlite
     serviceFuncArgs = {
         "modelPath": modelPath,
-        "latencyExecutablePath": Path(latencyExecutablePath)
+        "bechmarkmodelUpload": latencyExecutable,
+        "tempDirPath": settings.TEMP_DIR
     }
 
-    return LatencyOutput(executableOutput=await serviceFunc(**serviceFuncArgs))
+    return LatencyOutput(executableOutput=await latencyAssessmentTFlite(**serviceFuncArgs))
 
 # @evaluateRouter.post(
 #     "/",
