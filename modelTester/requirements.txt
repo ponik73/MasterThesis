@@ -5,3 +5,8 @@ kagglehub
 pillow
 
 python-certifi-win32
+
+fastapi[standard]
+pydantic
+pydantic-core
+pydantic-settings

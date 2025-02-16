@@ -1,0 +1,6 @@
+endpoint,request,description,params/body
+/,GET, return device fingerprint,
+/model, POST, upload the model, file
+/model, DELETE, remove model,
+/evaluate/latency/$framework, GET, evaluate latency (NN framework specific executable (benchmark_model)), executable path
+/evaluate/accuracy/$framework, POST, upload image batch and execute inference (NN framework specific script/library), image batch
