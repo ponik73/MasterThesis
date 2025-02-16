@@ -2,7 +2,8 @@ from pathlib import Path
 import shutil
 import subprocess
 from fastapi import HTTPException, UploadFile
-from model import config as modelConfig 
+from model import config as modelConfig
+from model.services import checkModelStorage
 
 async def latencyAssessmentTFlite(
         modelPath: Path,
@@ -35,3 +36,15 @@ async def latencyAssessmentTFlite(
     # TODO: remove the executable
 
     return assessmentProcess.stdout
+
+def isModelPresent(modelDir: Path, modelFramework: str):
+    # Check if the model is present in the storage:
+    modelPath = checkModelStorage(modelDir)
+    if not modelPath or not modelPath.exists() or not modelPath.is_file():
+        raise Exception("TODO exceptions.py file (or maybe here) - NoModelFoundError")
+    
+    # Check if the model's framework is compatible with request:
+    if modelPath.suffix != modelFramework:
+        raise Exception("TODO exceptions.py file (or maybe here) - MLFramworkNotSupportedError")
+    
+    return modelPath
