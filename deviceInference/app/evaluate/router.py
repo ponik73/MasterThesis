@@ -1,10 +1,9 @@
 from pathlib import Path
 from typing import Annotated
-from fastapi import APIRouter, Depends, File, UploadFile, Form
-from .schemas import LatencyRequestBody, LatencyOutput
-from .services import latencyAssessmentTFlite, isModelPresent
-from model.config import Settings, get_settings
-# from evaluate.schemas import AhojRequestBody, AhojOutput#, AhojOutput
+from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
+from .schemas import LatencyOutput
+from .services import latencyAssessment, accuracyAssessment
+from config import Settings, getSettings
 
 evaluateRouter = APIRouter(
     prefix="/evaluate",
@@ -17,36 +16,41 @@ evaluateRouter = APIRouter(
     response_model=LatencyOutput
 )
 async def evaluateLatencyTFLite(
+    modelCustomName: Annotated[str, Form()],
     latencyExecutable: Annotated[UploadFile, File(description="Executable that evaluates latency (e.g. benchmark_model for TFLite).")],
-    settings: Annotated[Settings, Depends(get_settings)]
-):    
-    # # Check if the model is present in the storage:
-    # modelPath = checkModelStorage(settings.MODEL_DIR)
-    # if not modelPath or not modelPath.exists() or not modelPath.is_file():
-    #     raise Exception("TODO exceptions.py file (or maybe here) - NoModelFoundError")
-    
-    # # Check if the model's framework is tflite:
-    # if modelPath.suffix != ".tflite":
-    #     raise Exception("TODO exceptions.py file (or maybe here) - MLFramworkNotSupportedError")
-    
-    modelPath = isModelPresent(settings.MODEL_DIR, ".tflite")
+    settings: Annotated[Settings, Depends(getSettings)],
+):
+    # TODO: Based on Linux (aarch64, arm, x86-64) get the benchmark_model executable (Docker process).
 
+    modelPath = settings.MODEL_DIR / f'{modelCustomName}.tflite'
+    if not modelPath or not modelPath.exists() or not modelPath.is_file():
+        raise Exception("TODO exceptions.py file (or maybe here) - ModelNotFoundError")
+    
     serviceFuncArgs = {
+        "frameworkNN": ".tflite",
         "modelPath": modelPath,
         "bechmarkmodelUpload": latencyExecutable,
         "tempDirPath": settings.TEMP_DIR
     }
 
-    return LatencyOutput(executableOutput=await latencyAssessmentTFlite(**serviceFuncArgs))
+    return LatencyOutput(executableOutput=latencyAssessment(**serviceFuncArgs))
 
 @evaluateRouter.post(
-    "/accuracy/tflite",
-    description="",
-    # response_model=AhojOutput
+    "/accuracy/tflite"#,
+    # description="",
+    # response_model=AhojOutput # TODO: output standard
 )
 async def evaluateAccuracyTFLite(
-    settings: Annotated[Settings, Depends(get_settings)]
+    # modelCustomName: Annotated[str, Form()],
+    modelCustomName: str,
+    batch: Annotated[bytes, File()],
+    settings: Annotated[Settings, Depends(getSettings)],
 ):
-    modelPath = isModelPresent(settings.MODEL_DIR, ".tflite")
-    
-    return {"ahoj": modelPath.as_posix()}
+    # Check if model is present for inference:
+    modelPath = settings.MODEL_DIR / f'{modelCustomName}.tflite'
+    if not modelPath or not modelPath.exists() or not modelPath.is_file():
+        raise HTTPException(status_code=500, detail=f"Model not found.")
+
+    result = accuracyAssessment(".tflite", modelPath, batch)
+
+    return {"aa": str(result)}

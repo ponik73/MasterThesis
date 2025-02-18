@@ -1,50 +1,58 @@
 from pathlib import Path
-import shutil
-import subprocess
+import numpy as np
+import pickle
+import codecs
+from typing import Literal
 from fastapi import HTTPException, UploadFile
-from model import config as modelConfig
-from model.services import checkModelStorage
+from .tflite.services import latencyAssessmentTFlite, accuracyAssessmentTFlite
 
-async def latencyAssessmentTFlite(
+def latencyAssessment(
+        frameworkNN: Literal[".tflite"],
         modelPath: Path,
         bechmarkmodelUpload: UploadFile,
         tempDirPath: Path
-    ):
+):
+    latencyAssessmentFunctions = {
+        ".tflite": latencyAssessmentTFlite
+    }
 
-    if bechmarkmodelUpload.filename is None:
-        raise HTTPException(status_code=400, detail="Field 'filename' is not present in uploaded form-data.")
+    if frameworkNN not in latencyAssessmentFunctions.keys():
+        raise HTTPException(status_code=500, detail=f"Framework `{frameworkNN}` not supported.")
+    
+    return latencyAssessmentFunctions[frameworkNN](modelPath, bechmarkmodelUpload, tempDirPath)
 
-    # Save executable:
-    tempDirPath.mkdir(exist_ok=True, parents=True)
-    latencyExecutablePath = tempDirPath / bechmarkmodelUpload.filename
+def accuracyAssessment(
+        frameworkNN: Literal[".tflite"],
+        modelPath: Path,
+        encodedBatch: bytes
+):
+    assessmentFunctions = {
+        ".tflite": accuracyAssessmentTFlite
+    }
+
+    # Decode batch data:
+    decodedBatch = decodeBatch(encodedBatch)
+
+    if frameworkNN not in assessmentFunctions.keys():
+        raise HTTPException(status_code=500, detail=f"Framework `{frameworkNN}` not supported.")
+    
+    return assessmentFunctions[frameworkNN](modelPath, decodedBatch)
+
+def decodeBatch(encodedBatch: bytes) -> np.array:
     try:
-        with latencyExecutablePath.open("wb+") as f:
-            f.write(bechmarkmodelUpload.file.read())
-        latencyExecutablePath.chmod(0o755)
-    except OSError as e:
-        raise HTTPException(status_code=500, detail=f"Unable to save executable. Reason: '{type(e).__name__}'.") from e
+        # obj_base64string = codecs.encode(pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL), "base64").decode('latin1')
+        # return np.array(pickle.loads(codecs.decode(encodedBatch.encode('latin1'), "base64")))
+        return np.array(pickle.loads(codecs.decode(encodedBatch, "base64")))
+        
+        # arrShape = batchShape[1:]
+        # decodedBatch = []
+        # for encodedArr in encodedBatch:
+        #     decodedArr = np.frombuffer(base64.b64decode(encodedArr), dtype=dtype).reshape(arrShape)
+        #     decodedBatch.append(decodedArr)
 
-    # Run the assessment:
-    try:
-        assessmentProcess = subprocess.run(f'{latencyExecutablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
-        if assessmentProcess.returncode != 0 or not assessmentProcess.stdout:
-            raise Exception(str(assessmentProcess.returncode) + assessmentProcess.stderr + "\n" + assessmentProcess.stdout)
-            # raise Exception("TODO exceptions.py file (or maybe here) - LatencyAssessmentError")
+        # return np.array(decodedBatch)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during latency assessment Reason: '{e}'.") from e
+        raise HTTPException(status_code=500, detail=f"Error during decoding batch data. Reason: '{e}'.") from e
 
-    # TODO: remove the executable
-
-    return assessmentProcess.stdout
-
-def isModelPresent(modelDir: Path, modelFramework: str):
-    # Check if the model is present in the storage:
-    modelPath = checkModelStorage(modelDir)
-    if not modelPath or not modelPath.exists() or not modelPath.is_file():
-        raise Exception("TODO exceptions.py file (or maybe here) - NoModelFoundError")
-    
-    # Check if the model's framework is compatible with request:
-    if modelPath.suffix != modelFramework:
-        raise Exception("TODO exceptions.py file (or maybe here) - MLFramworkNotSupportedError")
-    
-    return modelPath
+def encodeModelOutputs(modelOutputs: np.array) -> bytes:
+    return codecs.encode(pickle.dumps(modelOutputs, protocol=pickle.HIGHEST_PROTOCOL), "base64")

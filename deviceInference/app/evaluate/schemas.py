@@ -1,10 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl
-from typing import Literal
-
-class LatencyRequestBody(BaseModel):
-    """Pydantic schema for GET /evaluate endpoint request body."""
-
-    latencyExecutable: str = Field(description="Path to a framework specific latency evaluator executable.")
+from pydantic import BaseModel, Field
 
 class LatencyOutput(BaseModel):
     """Pydantic schema for generic profiling parser output."""
