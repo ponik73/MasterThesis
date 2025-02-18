@@ -6,10 +6,10 @@ class Settings(BaseSettings):
     """API global configuration properties."""
 
     MODEL_DIR: Path = Path("./model_storage")
+    EXECUTABLES_DIR: Path = Path("./executables")
     TEMP_DIR: Path = Path("./tmp")
-    SUPPORTED_FRAMEWORKS: list[str] = ["tflite"]
 
 @lru_cache
-def get_settings() -> Settings:
+def getSettings() -> Settings:
     """Cache function for Setting class instance."""
     return Settings()

@@ -1,9 +1,8 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, File, UploadFile
-from starlette import status
+from fastapi import APIRouter, Depends, File, UploadFile, Form
 
-from .config import Settings, get_settings
-from .services import saveModel, emptyModelStorage
+from config import Settings, getSettings
+from .services import saveModel
 
 modelRouter = APIRouter(
     prefix="/model",
@@ -12,26 +11,17 @@ modelRouter = APIRouter(
 
 @modelRouter.post(
         "/",
-        description="Upload model and save metadata to database."
+        description="Upload model."
 )
-async def upload_model(
+async def uploadModel(
+    customName: Annotated[str, Form()],
     modelFile: Annotated[UploadFile, File(description="Uploaded model file.")],
-    settings: Annotated[Settings, Depends(get_settings)]
+    settings: Annotated[Settings, Depends(getSettings)],
 ):
-    """Upload model and save metadata to database.
+    """Upload model
 
-    :param model_file: Reference to uploaded model file.
+    Args:
+        customName (Annotated[str, Form): Name model will be saved as.
+        modelFile (Annotated[UploadFile, File, optional): Reference to uploaded model file.
     """
-    return await saveModel(modelFile, settings.MODEL_DIR)
-
-
-@modelRouter.delete(
-    "/",
-    description="Delete model and all associated metadata.",
-    status_code=status.HTTP_204_NO_CONTENT
-)
-async def delete_model(
-    settings: Annotated[Settings, Depends(get_settings)]
-):
-    """Delete stored model."""
-    return await emptyModelStorage(settings.MODEL_DIR)
+    return saveModel(customName, modelFile, settings.MODEL_DIR)
