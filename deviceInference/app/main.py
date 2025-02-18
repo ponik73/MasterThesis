@@ -46,7 +46,7 @@ async def getFingerprint():
     cmdResult = subprocess.run('uname -r', capture_output=True, text=True, shell = True)
 
     if cmdResult.returncode != 0:
-        raise Exception #TODO: appropriate exception
+        raise HTTPException(status_code=400, detail=f"Unable to indentify the device. Reason {cmdResult.stderr}")
 
     return {"fingerprint": cmdResult.stdout}
 
