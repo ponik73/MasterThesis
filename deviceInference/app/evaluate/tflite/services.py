@@ -1,40 +1,38 @@
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
 import subprocess
-from .interpreter import tfliteInterpreter
 import numpy as np
+
+from .interpreter import tfliteInterpreter
+from .config import getExecutablePath, getExecutableUrl
 
 def latencyAssessmentTFlite(
         modelPath: Path,
-        bechmarkmodelUpload: UploadFile,
-        tempDirPath: Path
+        executableDir: Path
     ):
+    # Check if tflite latency executable is present:
+    executableDir.mkdir(parents=True, exist_ok=True)
+    executablePath = getExecutablePath(executableDir)
 
-    # TODO: Get tflite latency executable (docker setup)
-
-    if bechmarkmodelUpload.filename is None:
-        raise HTTPException(status_code=400, detail="Field 'filename' is not present in uploaded form-data.")
-
-    # Save executable:
-    tempDirPath.mkdir(exist_ok=True, parents=True)
-    latencyExecutablePath = tempDirPath / bechmarkmodelUpload.filename
-    try:
-        with latencyExecutablePath.open("wb+") as f:
-            f.write(bechmarkmodelUpload.file.read())
-        latencyExecutablePath.chmod(0o755)
-    except OSError as e:
-        raise HTTPException(status_code=500, detail=f"Unable to save executable. Reason: '{type(e).__name__}'.") from e
+    if not executablePath.exists(): # Download the executable:
+        architecture = _determineArchitecture()
+        # Source of the executable:
+        url = getExecutableUrl(architecture)
+        if not url:
+            raise HTTPException(status_code=500, detail=f"Architecture `{architecture}` not supported.")
+        # Download:
+        _fetchLatencyExecutable(url, executablePath)
+        if not executablePath.exists():
+            raise HTTPException(status_code=500, detail=f"Unable to download executable.")
 
     # Run the assessment:
     try:
-        assessmentProcess = subprocess.run(f'{latencyExecutablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
+        assessmentProcess = subprocess.run(f'{executablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
         if assessmentProcess.returncode != 0 or not assessmentProcess.stdout:
             raise Exception(str(assessmentProcess.returncode) + assessmentProcess.stderr + "\n" + assessmentProcess.stdout)
             # raise Exception("TODO exceptions.py file (or maybe here) - LatencyAssessmentError")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during latency assessment Reason: '{e}'.") from e
-
-    # TODO: remove the executable
 
     return assessmentProcess.stdout
 
@@ -46,3 +44,18 @@ def accuracyAssessmentTFlite(modelPath: Path, batch: np.array):
     singleInput = tfliteInterpreter.getInputDetails()
 
     return tfliteInterpreter.inference(singleInput["index"], batch)
+
+# TODO: maybe move somewhere more general
+def _determineArchitecture() -> str:
+    cmdResult = subprocess.run('uname -m', capture_output=True, text=True, shell = True)
+    if cmdResult.returncode != 0 or cmdResult.stderr:
+        raise HTTPException(status_code=500, detail=f"Could not determine device architecture.")
+    return cmdResult.stdout.strip()
+
+def _fetchLatencyExecutable(url: str, executablePath: Path):
+    import urllib.request
+    try:
+        urllib.request.urlretrieve(url, executablePath)
+        executablePath.chmod(0o755)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unable to download executable. Reason: '{type(e).__name__}'.") from e
