@@ -3,6 +3,7 @@ import numpy as np
 # import tflite_runtime.interpreter as tflite
 from tensorflow import lite as tflite
 from fastapi import HTTPException
+from typing import List
 
 class TfliteInterpreter():
     def __init__(self):
@@ -31,32 +32,40 @@ class TfliteInterpreter():
         # TODO: multiple inputs
         
         if not self.detailsInput:
-            raise HTTPException(status_code=500, detail=f"Unable to TFLite interpreter not initiated.")
+            raise HTTPException(status_code=500, detail=f"Unable to execyte TFLite inference.")
         
-        return {
-            "index": self.detailsInput[0]['index'],
-            "shape": np.array(self.detailsInput[0]['shape']),
-            "dtype": np.dtype(self.detailsInput[0]['dtype']).name 
-        }
+        return self.detailsInput[0]['index']
     
-    def inference(self, inputIdx: int, decodedBatch: np.array):
+    def getOutputIndexes(self) -> List[int]:
+        if not self.detailsOutput:
+            raise HTTPException(status_code=500, detail=f"Unable to execyte TFLite inference.")
+        
+        return [x['index'] for x in self.detailsOutput]
+    
+    def inference(self, batch: np.array):
         # TODO: multiple inputs
 
         try:
+            # Identify input:
+            inputIdx = self.getInputDetails()
+
             # Resize input for the batch:
-            self.interpreter.resize_tensor_input(inputIdx, decodedBatch.shape)
+            self.interpreter.resize_tensor_input(inputIdx, batch.shape)
             self.interpreter.allocate_tensors()
 
             # Execute the inference of batch:
-            # decodedBatch = np.ones([1,224,224,3], dtype='float32')
-            self.interpreter.set_tensor(inputIdx, decodedBatch)
+            self.interpreter.set_tensor(inputIdx, batch)
             self.interpreter.invoke()
 
             # Retrieve inference result:
-            result = self.interpreter.get_tensor(self.detailsOutput[0]['index'])
+            results = {}
+            outputIndexes = self.getOutputIndexes()
+            for outputIdx in outputIndexes:
+                results[str(outputIdx)] = self.interpreter.get_tensor(outputIdx)
+
         except Exception as e:
             raise Exception("TODO exceptions.py file (or maybe here) - TFLiteInferenceError" + e)
 
-        return result
+        return results
     
 tfliteInterpreter = TfliteInterpreter()

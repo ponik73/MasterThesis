@@ -40,10 +40,7 @@ def accuracyAssessmentTFlite(modelPath: Path, batch: np.array):
     # Check if interpeter instance is running, if not create an instance:
     tfliteInterpreter.start(modelPath)
 
-    # So far only one input models. TODO: multiple inputs; TODO: move into services.py
-    singleInput = tfliteInterpreter.getInputDetails()
-
-    return tfliteInterpreter.inference(singleInput["index"], batch)
+    return tfliteInterpreter.inference(batch)
 
 # TODO: maybe move somewhere more general
 def _determineArchitecture() -> str:
