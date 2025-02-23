@@ -61,7 +61,7 @@ class TfliteInterpreter():
             results = {}
             outputIndexes = self.getOutputIndexes()
             for outputIdx in outputIndexes:
-                results[str(outputIdx)] = self.interpreter.get_tensor(outputIdx)
+                results[outputIdx] = self.interpreter.get_tensor(outputIdx)
 
         except Exception as e:
             raise Exception("TODO exceptions.py file (or maybe here) - TFLiteInferenceError" + e)
