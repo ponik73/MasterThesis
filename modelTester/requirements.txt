@@ -2,11 +2,9 @@ huggingface_hub
 datasets
 kagglehub
 
-pillow
-
+asyncssh
 python-certifi-win32
 
-fastapi[standard]
 pydantic
 pydantic-core
 pydantic-settings
