@@ -1,22 +1,7 @@
-# TFLite tool `benchmark_model` is used for latency evaluation of TFLite models
-import asyncio, asyncssh
 from pathlib import Path
 import re
 
-async def evaluateLatencyTFLite(
-            conn: asyncssh.SSHClientConnection,
-            modelRemotePath: Path,
-            executablePath: str
-            ) -> dict:
-        # latencyExecutable = "/usr/bin/tensorflow-lite-2.16.2/examples/./benchmark_model"
-        # onDeviceModelPath = "/usr/bin/tensorflow-lite-2.16.2/examples/mobilenet_v1_1.0_224_quant.tflite"
-        assessment = {}
-
-        result = await conn.run(f'{executablePath} --graph={modelRemotePath.as_posix()}', timeout=160)
-        if result.exit_status == 0:
-            assessment = _parseLatencyTFLite(result.stdout)
-
-        return assessment
+# TODO: tflite latency parser
 
 def _parseLatencyTFLite(executableOutput: str) -> dict:
         metricRe = {
