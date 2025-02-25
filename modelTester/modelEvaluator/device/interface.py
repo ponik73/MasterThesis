@@ -123,8 +123,7 @@ class DeviceInterface():
                     # 'Content-Type': 'multipart/form-data',
                 },
                 "files" : {
-                    'modelCustomName': (None, modelCustomName),
-                    'latencyExecutable': open('/Users/jakubkasem/Downloads/linux_arm_benchmark_model', 'rb'), # TODO: remove this and remove this parameter from API definition deviceInference.app.evaluate.router
+                    'modelCustomName': (None, modelCustomName)
                 }
             }
 
