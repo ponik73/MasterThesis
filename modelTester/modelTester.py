@@ -5,6 +5,7 @@ import argparse
 from configurationHandler.cfgParser import ConfigParser, cfgDesc
 from downloader.controller import DownloaderController
 from modelEvaluator.controller import EvaluatorController
+from configuration import getSettings
 
 #TODO: Maybe do this as server - request "test" with cfg file; request "report"
 
@@ -34,23 +35,21 @@ if __name__ == "__main__":
     # Configuration for Model Evaluator component:
     devices, runs = cfgParser.getEvaluatorCfg()
 
-    # TODO: check devices first, then download models
-
-    # Initialize Downloader component:
-    downloader = DownloaderController(configurationDownloader)
-    print("#"*10 + "\n" + "RETRIEVING DATA FROM MODEL HUBS\n" + "#"*10 + "\n")
-    models, datasets = downloader.download()
-
     # Model Evaluator - initialization:
     print("#"*10 + "\n" + "DISCOVERING DEVICES\n" + "#"*10 + "\n")
-    evaluator = EvaluatorController(
-        devices,
-        runs,
-        models,
-        datasets
-        )
+    evaluator = EvaluatorController(devices, runs)
+
+    # Download items from model hubs:
+    print("#"*10 + "\n" + "RETRIEVING DATA FROM MODEL HUBS\n" + "#"*10 + "\n")
+    downloader = DownloaderController(configurationDownloader)
+    models, datasets = downloader.download()
+    # Pass downloaded items to the Model Evaluator:
+    evaluator.setModels(models)
+    evaluator.setDatasets(datasets)
+
     print("#"*10 + "\n" + "EXECUTING RUNS\n" + "#"*10 + "\n")
-    # Model Evaluator - execute all runs:
-    while not evaluator.finished():
-        evaluator.executeRun()
+    evaluator.createPipelines()
+    evaluator.executePipelines()
+
+    
 
