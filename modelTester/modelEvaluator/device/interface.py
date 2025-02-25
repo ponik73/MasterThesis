@@ -8,19 +8,17 @@ from typing import Literal
 from configuration import getSettings
 from .apiCalls import getFingerprintCall, uploadModelCall, evaluateLatencyTfliteCall, evaluateAccuracyTfliteCall
 
-# TODO: remove .controller
-
 class DeviceInterface():
     def __init__(self, url: Url, name: str):
         self.url = url
         self.name = name
         self.conn : HTTPConnection | None = None
         
-        # try:
-        #     # TODO: connect to the device: download, build, run docker fastapi
-        #     asyncio.get_event_loop().run_until_complete(self._initializeApi())
-        # except Exception as e:
-        #     raise Exception("TODO Message (maybe exceptions.py)")
+        try:
+            # TODO: connect to the device: download, build, run docker fastapi
+            asyncio.get_event_loop().run_until_complete(self._initializeApi())
+        except Exception as e:
+            raise Exception("TODO Message (maybe exceptions.py)")
 
     async def _initializeApi(self):
         # docker pull your-dockerhub-username/fastapi-tf:latest
