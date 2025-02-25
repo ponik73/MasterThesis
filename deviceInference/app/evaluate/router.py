@@ -19,7 +19,6 @@ evaluateRouter = APIRouter(
 )
 async def evaluateLatencyTFLite(
     modelCustomName: Annotated[str, Form()],
-    latencyExecutable: Annotated[UploadFile, File(description="Executable that evaluates latency (e.g. benchmark_model for TFLite).")],
     settings: Annotated[Settings, Depends(getSettings)],
 ):
     modelPath = settings.MODEL_DIR / f'{modelCustomName}.tflite'
@@ -29,7 +28,6 @@ async def evaluateLatencyTFLite(
     serviceFuncArgs = {
         "frameworkNN": ".tflite",
         "modelPath": modelPath,
-        "bechmarkmodelUpload": latencyExecutable,
         "tempDirPath": settings.TEMP_DIR
     }
 

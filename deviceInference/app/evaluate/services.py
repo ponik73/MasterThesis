@@ -9,7 +9,6 @@ from .tflite.services import latencyAssessmentTFlite, accuracyAssessmentTFlite
 def latencyAssessment(
         frameworkNN: Literal[".tflite"],
         modelPath: Path,
-        bechmarkmodelUpload: UploadFile,
         tempDirPath: Path
 ):
     latencyAssessmentFunctions = {
@@ -19,7 +18,7 @@ def latencyAssessment(
     if frameworkNN not in latencyAssessmentFunctions.keys():
         raise HTTPException(status_code=500, detail=f"Framework `{frameworkNN}` not supported.")
     
-    return latencyAssessmentFunctions[frameworkNN](modelPath, bechmarkmodelUpload, tempDirPath)
+    return latencyAssessmentFunctions[frameworkNN](modelPath, tempDirPath)
 
 def accuracyAssessment(
         frameworkNN: Literal[".tflite"],
