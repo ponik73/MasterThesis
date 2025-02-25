@@ -2,11 +2,10 @@ from configurationHandler.configurations import Device, Run, Model, Dataset
 from typing import List, Tuple
 from pydantic_core import Url
 from collections import defaultdict
+import asyncio
 
 from .device.interface import DeviceInterface
 from .pipeline import RunPipeline
-
-import asyncio, asyncssh
 
 class EvaluatorController():
     def __init__(
@@ -44,8 +43,6 @@ class EvaluatorController():
         # Remove datasets where dataset is None (not downloaded):
         self.datasets = [x for x in datasets if x.dataset]
 
-        # TODO: some class for dataset (shuffle, batching (maxsize), max batch number, ) (maybe in modelEvaluator.pipeline)
-
     def createPipelines(self):
         # Names of available devices, models, and datasets:
         namesDevices = {device.name for device in self.devices}
@@ -77,7 +74,7 @@ class EvaluatorController():
                 model = [x for x in self.models if x.name == run.modelName][0]
                 dataset = [x for x in self.datasets if x.name == run.datasetName][0]
                 pairsModelDataset.append((model, dataset))
-            # TODO: Order pairs by model name
+            # Order pairs by model name:
             pairsModelDataset = sorted(pairsModelDataset, key=lambda pair: pair[0].name)
             
             self.pipelines.append(
@@ -88,9 +85,22 @@ class EvaluatorController():
             )
 
     def executePipelines(self):
-        # TODO: function for executing pipelines asynchronously - asyncio
+        # # Single pipeline:
+        # pipeline = self.pipelines[0]
+        # pipeline.execute()
+        # pass
 
-        # Single pipeline:
-        pipeline = self.pipelines[0]
-        pipeline.execute()
-        pass
+        # Multiple pipelines:
+
+        # async def executeInThread(pipeline: RunPipeline):
+        #     """Runs the blocking execute() method asynchronously"""
+        #     await asyncio.to_thread(pipeline.execute)
+        # async def runPipelines():
+        #     await asyncio.gather(*(executeInThread(pipeline) for pipeline in self.pipelines))
+        # asyncio.run(*(runPipelines(pipeline) for pipeline in self.pipelines))
+
+        asyncio.run(
+            asyncio.gather(
+                *(asyncio.to_thread(pipeline.execute) for pipeline in self.pipelines)
+            )
+        )
