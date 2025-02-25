@@ -3,6 +3,7 @@ from pathlib import Path
 # from datasets import Dataset as hfDataset
 
 from .device.interface import DeviceInterface
+from .latency.parserFactory import latencyParserFactory
 from configurationHandler.configurations import Model, Dataset
 
 class RunPipeline():
@@ -18,8 +19,12 @@ class RunPipeline():
 
     def execute(self):
         while len(self.pairsModelDataset) != 0:
-            model, dataset = self.pairsModelDataset.pop()
-            self._executeRun(model, dataset)
+            try:
+                model, dataset = self.pairsModelDataset.pop()
+                self._executeRun(model, dataset)
+                print(f'[{self.deviceInterface.name}] Finished evaluation of `{model.name}` and `{dataset.name}`. Reason: {e}.')
+            except Exception as e:
+                print(f'[{self.deviceInterface.name}] Could not finish evaluation of `{model.name}` and `{dataset.name}`. Reason: {e}.')
 
     def _executeRun(self, model: Model, dataset: Dataset):
         # Runs are ordered by models. Upload the next model:
@@ -37,7 +42,9 @@ class RunPipeline():
         # Parse the output:
         if not latencyRawOutput:
             return
-        # TODO: parser - get by framework + execute
+        
+        parser = latencyParserFactory(modelFramework)
+        latencyResults = parser.parse(latencyRawOutput)
     
         # # Evaluate accuracy on device:
         # TODO: batch?????
