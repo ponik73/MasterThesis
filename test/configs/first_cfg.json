@@ -5,8 +5,8 @@
             "uri": "10.171.65.19"
         },
         {
-            "uri": "uri2",
-            "name": "name"
+            "uri": "http://localhost:8000",
+            "name": "localhost"
         }
     ],
     "models": [
@@ -36,13 +36,6 @@
             "task": "image-classification",
             "platform": "hf",
             "uri": "Kalray/mobilenet-v1/blob/main/mobilenet-v1-mlperf.tflite",
-            "input_shape": [1,32,32]
-        },
-        {
-            "name": "custom_model_name_3",
-            "task": "object-detection",
-            "platform": "hf",
-            "uri": "qualcomm/Yolo-v7-Quantized/blob/main/Yolo-v7-Quantized.tflite",
             "input_shape": [1,32,32]
         },
         {
@@ -82,17 +75,17 @@
     ],
     "runs": [
         {
-            "device": "8mp",
-            "model": "custom_model_name_3",
+            "device": "localhost",
+            "model": "custom_model_name_4",
             "dataset": "imagenet1k_hf_small"
         },
         {
-            "device": "8mp",
-            "model": "custom_model_name_3",
+            "device": "localhost",
+            "model": "custom_model_name_4",
             "dataset": "fastai-imagenet"
         },
         {
-            "device": "8mp",
+            "device": "localhost",
             "model": "invalid_model_name_1",
             "dataset": "invalid_dataset_1"
         }
