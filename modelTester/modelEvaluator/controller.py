@@ -85,22 +85,5 @@ class EvaluatorController():
             )
 
     def executePipelines(self):
-        # # Single pipeline:
-        # pipeline = self.pipelines[0]
-        # pipeline.execute()
-        # pass
-
-        # Multiple pipelines:
-
-        # async def executeInThread(pipeline: RunPipeline):
-        #     """Runs the blocking execute() method asynchronously"""
-        #     await asyncio.to_thread(pipeline.execute)
-        # async def runPipelines():
-        #     await asyncio.gather(*(executeInThread(pipeline) for pipeline in self.pipelines))
-        # asyncio.run(*(runPipelines(pipeline) for pipeline in self.pipelines))
-
-        asyncio.run(
-            asyncio.gather(
-                *(asyncio.to_thread(pipeline.execute) for pipeline in self.pipelines)
-            )
-        )
+        for pipeline in self.pipelines:
+            pipeline.execute()

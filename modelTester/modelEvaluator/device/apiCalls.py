@@ -24,7 +24,6 @@ def apiCall(
                 response.raise_for_status()
                 return func(response, url, **kwargs)
             except Exception as e:
-                print(f"API call {method} {endpoint} failed: {e}")
                 return func(None, url, **kwargs)
         
         return wrapper
@@ -42,17 +41,20 @@ def getFingerprintCall(response: Response | None, url: Url, **kwargs) -> str:
 
 @apiCall(
     method="POST",
-    endpoint="model"
+    endpoint="model/upload"
 )
 def uploadModelCall(response: Response | None, url: Url, **kwargs):
     pass
 
 @apiCall(
-    method="POST",
-    endpoint="model"
+    method="GET",
+    endpoint="model/input-info/tflite"
 )
-def uploadModelCall(response: Response | None, url: Url, **kwargs):
-    pass
+def getModelInputInfoTfliteCall(response: Response | None, url: Url, **kwargs):
+    if not response:
+        raise
+    
+    return response.json()["inputs"]
 
 @apiCall(
     method="POST",

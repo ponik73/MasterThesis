@@ -3,10 +3,10 @@ import requests
 from http.client import HTTPConnection
 from pathlib import Path
 from pydantic_core import Url
-from typing import Literal
+from typing import Literal, List, Dict
 
 from configuration import getSettings
-from .apiCalls import getFingerprintCall, uploadModelCall, evaluateLatencyTfliteCall, evaluateAccuracyTfliteCall
+from .apiCalls import getFingerprintCall, uploadModelCall, getModelInputInfoTfliteCall, evaluateLatencyTfliteCall, evaluateAccuracyTfliteCall
 
 class DeviceInterface():
     def __init__(self, url: Url, name: str):
@@ -14,11 +14,11 @@ class DeviceInterface():
         self.name = name
         self.conn : HTTPConnection | None = None
         
-        try:
-            # TODO: connect to the device: download, build, run docker fastapi
-            asyncio.get_event_loop().run_until_complete(self._initializeApi())
-        except Exception as e:
-            raise Exception("TODO Message (maybe exceptions.py)")
+        # try:
+        #     # TODO: connect to the device: download, build, run docker fastapi
+        #     asyncio.get_event_loop().run_until_complete(self._initializeApi())
+        # except Exception as e:
+        #     raise Exception("TODO Message (maybe exceptions.py)")
 
     async def _initializeApi(self):
         # docker pull your-dockerhub-username/fastapi-tf:latest
@@ -109,34 +109,56 @@ class DeviceInterface():
         except Exception as e:
             print(f'Unable to upload model `{modelCustomName}` to device: `{self.name}` at `{self.url}`. Reason: {e}')
             return False
-
-    def evaluateLatency(
+        
+    def getModelInputInfo(
             self,
             modelCustomName: str,
             modelFramework: Literal["tflite"]
-    ) -> str | None:
+    ) -> List[Dict]:
         try:
             callArgs = {
-                "headers" : {
+                "headers": {
                     'accept': 'application/json',
-                    # requests won't add a boundary if this header is set when you pass files=
-                    # 'Content-Type': 'multipart/form-data',
                 },
-                "files" : {
-                    'modelCustomName': (None, modelCustomName)
+                "params": {
+                    "modelCustomName": modelCustomName
                 }
             }
 
             if modelFramework == "tflite":
-                return evaluateLatencyTfliteCall(
+                return getModelInputInfoTfliteCall(
                     url=self.url,
                     **callArgs
                 )
             else:
                 raise Exception(f'{modelFramework} framework not supported.')
         except Exception as e:
-            print(f'Unable to evaluate latency for model `{modelCustomName}` on device: `{self.name}` at `{self.url}`. Reason: {e}')
-            return None
+            print(f'Unable to retrieve model input details `{modelCustomName}`. Reason: {e}')
+            return []
+
+    def evaluateLatency(
+            self,
+            modelCustomName: str,
+            modelFramework: Literal["tflite"]
+    ) -> str | None:
+        callArgs = {
+            "headers" : {
+                'accept': 'application/json',
+                # requests won't add a boundary if this header is set when you pass files=
+                # 'Content-Type': 'multipart/form-data',
+            },
+            "files" : {
+                'modelCustomName': (None, modelCustomName)
+            }
+        }
+
+        if modelFramework == "tflite":
+            return evaluateLatencyTfliteCall(
+                url=self.url,
+                **callArgs
+            )
+        else:
+            raise Exception(f'{modelFramework} framework not supported.')
     
     def evaluateAccuracy(
             self,
@@ -144,8 +166,6 @@ class DeviceInterface():
             modelFramework: Literal["tflite"],
             encodedBatch: bytes
     ) -> bytes | None:
-        pass
-
         try:
             callArgs = {
                 "headers" : {

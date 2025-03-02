@@ -16,6 +16,10 @@ argParser.add_argument("--cfg-help", default=False, action="store_true", help="P
 argParser.usage = f'<pyhon> modelTester.py --cfg=<PATH_CFG>'
 argParser.description = "a"
 
+# TODO: suppress the prints from the libraries; print only this program messages
+# import sys
+# print("aa", file=sys.__stdout__)
+
 if __name__ == "__main__":
     args = argParser.parse_args()
 
