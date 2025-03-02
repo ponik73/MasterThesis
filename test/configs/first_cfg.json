@@ -76,12 +76,12 @@
     "runs": [
         {
             "device": "localhost",
-            "model": "custom_model_name_4",
+            "model": "custom_model_name_2",
             "dataset": "imagenet1k_hf_small"
         },
         {
             "device": "localhost",
-            "model": "custom_model_name_4",
+            "model": "custom_model_name_2",
             "dataset": "fastai-imagenet"
         },
         {
