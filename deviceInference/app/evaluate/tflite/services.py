@@ -5,6 +5,7 @@ import numpy as np
 
 from .interpreter import tfliteInterpreter
 from .config import getExecutablePath, getExecutableUrl
+from ..schemas import Batch
 
 def latencyAssessmentTFlite(
         modelPath: Path,
@@ -36,11 +37,18 @@ def latencyAssessmentTFlite(
 
     return assessmentProcess.stdout
 
-def accuracyAssessmentTFlite(modelPath: Path, batch: np.array):
+def accuracyAssessmentTFlite(modelPath: Path, batch: Batch):
     # Check if interpeter instance is running, if not create an instance:
     tfliteInterpreter.start(modelPath)
 
     return tfliteInterpreter.inference(batch)
+
+def getInputInfo(modelPath: Path):
+    if tfliteInterpreter.modelPath == modelPath:
+        return tfliteInterpreter.getInputDetails()
+    
+    tfliteInterpreter.start(modelPath)
+    return tfliteInterpreter.getInputDetails()
 
 # TODO: maybe move somewhere more general
 def _determineArchitecture() -> str:

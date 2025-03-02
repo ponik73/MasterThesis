@@ -5,6 +5,7 @@ import codecs
 from typing import Literal
 from fastapi import HTTPException, UploadFile
 from .tflite.services import latencyAssessmentTFlite, accuracyAssessmentTFlite
+from .schemas import Batch
 
 def latencyAssessment(
         frameworkNN: Literal[".tflite"],
@@ -40,10 +41,9 @@ def accuracyAssessment(
     
     return encodeModelOutputs(inferenceResult)
 
-def decodeBatch(encodedBatch: bytes) -> np.array:
+def decodeBatch(encodedBatch: bytes) -> Batch:
     try:
-        return np.array(pickle.loads(codecs.decode(encodedBatch, "base64")))
-        
+        return Batch(items=pickle.loads(codecs.decode(encodedBatch, "base64")))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during decoding batch data. Reason: '{e}'.") from e
 

@@ -1,6 +1,8 @@
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
 
+from evaluate.tflite import services as tfliteServices
+
 def saveModel(
         customName: str,
         modelUploadFile: UploadFile,
@@ -29,3 +31,11 @@ def saveModel(
             f.write(modelUploadFile.file.read())
     except OSError as e:
         raise HTTPException(status_code=500, detail=f"Unable to save model file. Reason: '{type(e).__name__}'.") from e
+    
+def getModelInputInfoTflite(modelName: str, modelDir: Path):
+    # Check if model exists:
+    modelPath = modelDir / f"{modelName}.tflite"
+    if not modelPath.exists():
+        raise HTTPException(status_code=500, detail=f"Model `{modelName}.tflite` not found.")
+    
+    return tfliteServices.getInputInfo(modelPath)
