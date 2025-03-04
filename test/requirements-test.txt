@@ -1,0 +1,5 @@
+-r ../modelTester/requirements.txt
+-r ../deviceInference/requirements.txt
+
+ruff
+mypy[reports]

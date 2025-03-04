@@ -1,0 +1,47 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
+# Allow all linting rules and then ignore those that do not make sense/cause problems
+# The complete list of Ruff rules: https://docs.astral.sh/ruff/rules/
+select = [
+    "ALL"
+]
+# If a linting rule does more harm than good, ignore it.
+# But every rule ignore must have an explanation of why!
+ignore = [
+    "ERA001",  # "Found commented-out code", incompatible with NXP license headers
+    "D100",    # "Missing docstring in public module", incompatible with NXP license headers
+    "D104",    # "Missing docstring in public package", incompatible with NXP license headers
+    "D203",    # Incompatible with D211 rule
+    "D213",    # Incompatible with D212 rule
+    "COM812",  # Conflicts with "ruff format" command
+    "ISC001",  # Conflicts with "ruff format" command
+    "TD003",   # Ignore JIRA issue link for each TODO comment (too demanding)
+    "S507"     # Ignore check for auto-adding the SSH host into 'know_hosts' file, there is prerequisite that user will connect only to trusted devices
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore rules that do not make sense specifically for unit tests
+"test/*" = [
+    "ANN001",  # Missing type annotation
+    "ANN201",  # Missing return type
+    "ANN202",  # Missing return type for private function
+    "D",       # All docstring rules
+    "INP001",  # File is part of an implicit namespace package. Add an `__init__.py`
+    "PLR2004", # Magic value used in comparison
+    "S101",    # Use of `assert` detected
+]
+
+[tool.mypy]
+exclude = [
+    "venv",
+    ".venv",
+    "test"
+]
