@@ -7,11 +7,6 @@ def resizeImages(
         dataset: hfDataset,
         columns : Dict[str, Tuple[Tuple[int, int], Literal["RGB"]]]
 ):
-    # def transforms(item: formatting.formatting.LazyDict, key: str, targetSize: Tuple[int, int], mode: str):
-    #     image : Image.Image = item[key]
-    #     item[key] = image.convert(mode).resize(targetSize, resample=Image.Resampling.LANCZOS)
-    #     return item
-    # def transformsWrapper(key: str, targetSize: Tuple[int, int], mode: str) -> Callable[[Any]]:
     def transformsWrapper(key: str, targetSize: Tuple[int, int], mode: str):
         def transforms(item):
             image : Image.Image = item[key]
