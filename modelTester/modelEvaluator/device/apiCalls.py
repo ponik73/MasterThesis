@@ -70,7 +70,7 @@ def evaluateLatencyTfliteCall(response: Response | None, url: Url, **kwargs) -> 
     method="POST",
     endpoint="evaluate/accuracy/tflite"
 )
-def evaluateAccuracyTfliteCall(response: Response | None, url: Url, **kwargs) -> bytes:
+def predictTfliteCall(response: Response | None, url: Url, **kwargs) -> bytes:
     if not response:
         raise
     

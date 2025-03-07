@@ -3,10 +3,10 @@ import requests
 from http.client import HTTPConnection
 from pathlib import Path
 from pydantic_core import Url
-from typing import Literal, List, Dict
+from typing import Literal, List, Dict, Any
 
 from configuration import getSettings
-from .apiCalls import getFingerprintCall, uploadModelCall, getModelInputInfoTfliteCall, evaluateLatencyTfliteCall, evaluateAccuracyTfliteCall
+from .apiCalls import getFingerprintCall, uploadModelCall, getModelInputInfoTfliteCall, evaluateLatencyTfliteCall, predictTfliteCall
 
 class DeviceInterface():
     def __init__(self, url: Url, name: str):
@@ -160,7 +160,7 @@ class DeviceInterface():
         else:
             raise Exception(f'{modelFramework} framework not supported.')
     
-    def evaluateAccuracy(
+    def predict(
             self,
             modelCustomName: str,
             modelFramework: Literal["tflite"],
@@ -180,7 +180,7 @@ class DeviceInterface():
             }
 
             if modelFramework == "tflite":
-                return evaluateAccuracyTfliteCall(
+                return predictTfliteCall(
                     url=self.url,
                     **callArgs
                 )
@@ -190,3 +190,4 @@ class DeviceInterface():
         except Exception as e:
             print(f'Unable to evaluate accuracy for model `{modelCustomName}` on device: `{self.name}` at `{self.url}`. Reason: {e}')
             return None
+        
