@@ -8,7 +8,7 @@ from pathlib import Path
 
 def loadDs(path: str):
     # localPath = kagglehub.dataset_download(path)
-    localPath = '/Users/jakubkasem/.cache/kagglehub/datasets/samrat230599/fastai-imagenet/versions/3'
+    localPath = '/Users/jakubkasem/.cache/kagglehub/datasets/deeptrial/miniimagenet/versions/2'
     ds = hf_load_dataset(localPath)
     ds = ds[next(iter(ds))]
     return ds
@@ -21,12 +21,13 @@ def setupPipeline():
 
     model = Model(
         name="mobilenet",
-        task="image-classification",
-        input_shape=[1,1,1],
+        task=Model.SupportedTasks.IMAGE_CLASSIFICATION,
+        # task=Model.SupportedTasks.IMAGE_CLASSIFICATION_MULTI_CLASS,
         platform="hf",
-        uri="nejaka/uri"
+        uri="nejaka/uri",
     )
     model.localPath = Path("/Users/jakubkasem/Downloads/mobilenet_v1_1.0_224_quant.tflite")
+    model.framework = Model.SupportedFrameworks.TFLITE
 
     dataset = Dataset(
         name="datasetik",
