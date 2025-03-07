@@ -1,0 +1,6 @@
+numpy
+fastapi[standard]
+pydantic
+pydantic-core
+pydantic-settings
+tflite-runtime

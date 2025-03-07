@@ -1,68 +1,89 @@
 from configurationHandler.configurations import Device, Run, Model, Dataset
-from .device.controller import DeviceController
+from typing import List, Tuple
+from pydantic_core import Url
+from collections import defaultdict
+import asyncio
 
-import asyncio, asyncssh
+from .device.interface import DeviceInterface
+from .pipeline import RunPipeline
 
 class EvaluatorController():
     def __init__(
             self,
-            devices: list[Device],
-            runs: list[Run],
-            models: list[Model],
-            datasets: list[Dataset]
+            devices: List[Device],
+            runs: List[Run]
             ):
+        self.models : List[Model] = []
+        self.datasets : List[Dataset] = []
+        self.runs = runs
+        self.devices : List[Device] = []
+        self.deviceInteraces : List[DeviceInterface] = []
+        self.pipelines : List[RunPipeline] = []
+
+        # Discover devices:
+        for dev in devices:
+            try:
+                # Initialize the device API:
+                interface = DeviceInterface(url=Url(dev.uri), name=dev.name)
+                # Get device fingerprint:
+                dev.fingerprint = interface.getFingerprint()
+
+                self.devices.append(dev)
+                self.deviceInteraces.append(interface)
+
+                print(f'Device `{dev.name}` at `{dev.uri}` was discovered.')
+            except Exception as e:
+                print(f'Unable to discover `{dev.name}` at `{dev.uri}`. Reason: {e}')
+
+    def setModels(self, models: List[Model]):
         # Remove models where localPath is None (not downloaded):
         self.models = [x for x in models if x.localPath]
+
+    def setDatasets(self, datasets: List[Dataset]):
         # Remove datasets where dataset is None (not downloaded):
         self.datasets = [x for x in datasets if x.dataset]
 
-        # If device is available, create controller and save device's fingerprint:
-        self.deviceControllers : list[DeviceController] = []
-        for x in devices:
-            controller = self._isDeviceAvailable(x)
-            if controller:
-                print(f'Device {x.name} discovered')
-                self.deviceControllers.append(controller)
-            else:
-                print(f'Device {x.name} could not be discovered')
+    def createPipelines(self):
         # Names of available devices, models, and datasets:
-        namesAvailable = lambda lst : [x.name for x in lst]
+        namesDevices = {device.name for device in self.devices}
+        namesModels = {model.name for model in self.models}
+        namesDatasets = {dataset.name for dataset in self.datasets}
         # Filter runs based on available models/datasets:
-        self.runs = [x for x in runs if (x.deviceName in namesAvailable([x.device for x in self.deviceControllers]) and x.modelName in namesAvailable(self.models) and x.datasetName in namesAvailable(self.datasets))]
-    
-    def _isDeviceAvailable(self, dev: Device) -> DeviceController | None:
-        deviceController = DeviceController(dev)
-        try:
-            # asyncio.get_event_loop().run_until_complete(run_client())
-            available = asyncio.get_event_loop().run_until_complete(deviceController.getFingerprint())
-            if available:
-                return deviceController
-            return None
-        except (OSError, asyncssh.Error) as exc:
-            print('SSH connection failed: ' + str(exc))
-            return None
-    
-    def finished(self):
-        return len(self.runs) == 0
-    
-    def executeRun(self):
-        try:
-            run = self.runs.pop()
+        self.runs = [
+            run for run in self.runs
+            if run.deviceName in namesDevices
+            and run.modelName in namesModels
+            and run.datasetName in namesDatasets
+        ]
+
+        # Group runs by device:
+        runsByDevice = defaultdict(list)
+        for run in self.runs:
+            runsByDevice[run.deviceName].append(run)
+        runsByDevice = dict(runsByDevice)
+
+        # Create pipeline for each device:
+        for deviceName in runsByDevice.keys():
+            # Interface for a given device:
+            interface = [x for x in self.deviceInteraces if x.name == deviceName][0]
+
+            # Run for a device is defined by model and dataset:
+            pairsModelDataset : List[Tuple[Model, Dataset]] = []
+            # Create pairs of models and datasets:
+            for run in runsByDevice[deviceName]:
+                model = [x for x in self.models if x.name == run.modelName][0]
+                dataset = [x for x in self.datasets if x.name == run.datasetName][0]
+                pairsModelDataset.append((model, dataset))
+            # Order pairs by model name:
+            pairsModelDataset = sorted(pairsModelDataset, key=lambda pair: pair[0].name)
             
-            print(f'RUN:\n\tdevice:\t{run.deviceName}\n\tmodel:\t{run.modelName}\n\tdataset:\t{run.datasetName}')
-            
-            deviceController = [x for x in self.deviceControllers if x.device.name == run.deviceName][0]
-            model = [x for x in self.models if x.name == run.modelName][0]
-            
-            print("Uploading model ...")
-            modelRemotePath = asyncio.get_event_loop().run_until_complete(deviceController.uploadModel(model.localPath))
-            # TODO: latency
-            print("Latency assessment ...")
-            latency = asyncio.get_event_loop().run_until_complete(deviceController.evaluateLatency(modelRemotePath))
-            # TODO: dataset??
-            # TODO: accuracy??
-            # TODO: write to the DB
-            print(latency)
-        except Exception as ex:
-            print(str(ex))
-            return None
+            self.pipelines.append(
+                RunPipeline(
+                    deviceInterface=interface,
+                    pairsModelDataset=pairsModelDataset
+                )
+            )
+
+    def executePipelines(self):
+        for pipeline in self.pipelines:
+            pipeline.execute()

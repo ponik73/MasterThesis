@@ -1,7 +1,12 @@
 huggingface_hub
 datasets
 kagglehub
-
 pillow
+torch
 
+asyncssh
 python-certifi-win32
+
+pydantic
+pydantic-core
+pydantic-settings
