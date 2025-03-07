@@ -52,6 +52,7 @@ class DownloadHandler():
         for m in self.models:
             try:
                 m.localPath = Path(self.downloadModelFunc(m.uri))
+                m.framework = Model.SupportedFrameworks(m.localPath.suffix.lstrip("."))
                 print(f'{m.name} loaded')
             except Exception as ex:
                 m.localPath = None

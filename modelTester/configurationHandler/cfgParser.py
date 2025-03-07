@@ -169,7 +169,7 @@ Devices:
 - uri (device's reachable location).
 Models:
 - name (custom model name),
-- task """ + str(Model.supportedTasks) + """,
+- task """ + str(Model.SupportedTasks.__members__.items()) + """,
 - input_shape (list of integers representing model's input shape),
 - platform """ + str(supportedModelHubs) + """,
 - uri (location within platform).
