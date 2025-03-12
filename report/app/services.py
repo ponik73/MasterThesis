@@ -126,5 +126,4 @@ def generate_report_service(
     
     # Create html report:
     html_content = template.render(results=results)
-    # TODO: store html report into DB with timestamp, return the id and html document
     return html_content

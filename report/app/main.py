@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 
-from schemas import RegisterRunInput, RegisterRunOutput, GetReportInput, GetReportOutput
+from schemas import RegisterRunInput, RegisterRunOutput, GetReportInput
 from services import register_run_service, generate_report_service
 
 app = FastAPI(
@@ -18,9 +18,8 @@ app = FastAPI(
 
 ################## DATABASE
 
-sqlite_file_name = "database.db" # TODO: config
 engine = create_engine(
-    f"sqlite:///{sqlite_file_name}",
+    "sqlite:///database.db",
     connect_args={
         "check_same_thread": False
     }
@@ -33,9 +32,8 @@ def get_session():
 
 ################## HTML
 
-# templates = Jinja2Templates(directory="html/templates") # TODO config
 jinja_env = Environment(loader=FileSystemLoader("html/templates"))
-app.mount("/static", StaticFiles(directory="html/static"), name="static") # TODO config
+app.mount("/static", StaticFiles(directory="html/static"), name="static")
 
 ################## LIFESPAN TODO       
 
@@ -66,7 +64,7 @@ def generate_report(
     experiment: Annotated[GetReportInput, Query(..., description="List of run IDs")],
     db: Annotated[Session, Depends(get_session)],
 ):
-    template = jinja_env.get_template("report.html") # TODO: config
+    template = jinja_env.get_template("report.html")
     return HTMLResponse(
         content=generate_report_service(
             run_ids=list(set(experiment.run_ids)),
