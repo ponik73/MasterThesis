@@ -21,6 +21,10 @@ class Settings(BaseSettings):
         image="device-api",
         version="latest"
         )
+    
+    REPORT_API_URL : Url = Url("http://localhost:8001")
+    REPORT_SAVE_PATH : Path = Path("./reports")
+    REPORT_OPEN_IN_BROWSER : bool = True
 
 @lru_cache
 def getSettings() -> Settings:

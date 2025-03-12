@@ -1,13 +1,11 @@
-from typing import List, Tuple, Any, Dict
-from pathlib import Path
-# from datasets import Dataset as hfDataset
-import numpy as np
-from sys import getsizeof
-from torch.utils.data import DataLoader
+from __future__ import annotations
+from typing import List, Tuple
+from pydantic import BaseModel
 
-from .accuracy.evaluator.accuracyEvaluatorFactory import accuracyEvaluatorFactory
-from .device.interface import DeviceInterface
-from .latency.parserFactory import latencyParserFactory
+from modelEvaluator.accuracy.evaluator.accuracyEvaluatorFactory import accuracyEvaluatorFactory
+from modelEvaluator.accuracy.metrics.metric import MetricResult
+from modelEvaluator.api.device.interface import DeviceInterface
+from modelEvaluator.latency.parserFactory import latencyParserFactory
 from configurationHandler.configurations import Model, Dataset
 
 class RunPipeline():
@@ -21,22 +19,20 @@ class RunPipeline():
 
         self.currentModelName : str | None = None
 
-    def execute(self):
-        while len(self.pairsModelDataset) != 0:
-            try:
-                model, dataset = self.pairsModelDataset.pop()
-                self._executeRun(model, dataset)
-                print(f'[{self.deviceInterface.name}] Finished evaluation of `{model.name}` and `{dataset.name}`.')
-            except Exception as e:
-                print(f'[{self.deviceInterface.name}] Could not finish evaluation of `{model.name}` and `{dataset.name}`. Reason: {e}.')
+    def empty(self) -> bool:
+        return len(self.pairsModelDataset) == 0
+    
+    def execute_run(self):
+        model, dataset = self.pairsModelDataset.pop()
+        return (model, dataset, self._executeRun(model, dataset))
 
-    def _executeRun(self, model: Model, dataset: Dataset):
+    def _executeRun(self, model: Model, dataset: Dataset) -> Tuple[List[MetricResult], List[MetricResult]]:
         # Runs are ordered by models. Upload the next model:
         if model.name != self.currentModelName:
             self.currentModelName = model.name
             uploaded = self.deviceInterface.uploadModel(model.localPath, model.name)
             if not uploaded:
-                return
+                raise Exception("TODO")
 
         # # Evaluate latency on device:
         # latencyRawOutput = self.deviceInterface.evaluateLatency(model.name, model.framework)
@@ -46,10 +42,15 @@ class RunPipeline():
         
         # parser = latencyParserFactory(model.framework)
         # latencyResults = parser.parse(latencyRawOutput)
+        ########################################################
+        #  dummy:
+        from modelEvaluator.accuracy.metrics.metric import MetricResult
+        latencyResults = [
+                MetricResult(name="latency_metric_1", value=1.0),
+                MetricResult(name="latency_metric_2", value=2.0)
+        ]
+        ########################################################
     
-        
-        SEED = 690
-        np.random.seed(SEED)
         # Evaluate accuracy on device:
         accuracyEvaluator = accuracyEvaluatorFactory(model.task)(
             model=model,
@@ -58,7 +59,5 @@ class RunPipeline():
         )
         accuracyResults = accuracyEvaluator.evaluate()
         
-        # TODO: Write results to database: (TODO maybe new fastapi for db)
-        # print(latencyResults)
-        print(accuracyResults)
+        return (latencyResults, accuracyResults)
         

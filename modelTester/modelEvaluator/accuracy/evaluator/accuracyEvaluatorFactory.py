@@ -1,13 +1,11 @@
 from typing import Dict
 from configurationHandler.configurations import Model
-from .cv.imageClassification import ImageClassificationAccuracyEvaluator
+from .cv.singleInputSingleOutput import SingleInputSingleOutputAccuracyEvaluator
 
 # EVALUATOR_REGISTRY : Dict[Model.SupportedTasks, AccuracyEvaluator] = {
 EVALUATOR_REGISTRY = {
-    # Model.SupportedTasks.IMAGE_CLASSIFICATION_BINARY: ImageClassificationAccuracyEvaluator,
-    # Model.SupportedTasks.IMAGE_CLASSIFICATION_MULTI_CLASS: ImageClassificationAccuracyEvaluator, 
-    # Model.SupportedTasks.IMAGE_CLASSIFICATION_MULTI_LABEL: ImageClassificationAccuracyEvaluator,
-    Model.SupportedTasks.IMAGE_CLASSIFICATION: ImageClassificationAccuracyEvaluator,
+    # Model.SupportedTasks.IMAGE_CLASSIFICATION: ImageClassificationAccuracyEvaluator,
+    Model.SupportedTasks.IMAGE_CLASSIFICATION: SingleInputSingleOutputAccuracyEvaluator,
     # Model.SupportedTasks.OBJECT_DETECTION: AccuracyEvaluator, # TODO: implement evaluator
     # Model.SupportedTasks.SEMANTIC_SEGMENTATION: AccuracyEvaluator, # TODO: implement evaluator
 }

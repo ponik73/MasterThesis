@@ -5,14 +5,13 @@ from pathlib import Path
 import numpy as np
 from torch.utils.data import DataLoader
 
-from modelEvaluator.device.utils import encodeData, decodeData
+from modelEvaluator.api.utils import encodeData, decodeData
 from configurationHandler.configurations import Model
-from ..accuracyEvaluator import AccuracyEvaluator
+from ..accuracyEvaluator import AccuracyEvaluator, computeMetrics
 from .utils import resizeImages
-from modelEvaluator.accuracy.metrics.metric import EvaluationMetrics
-from modelEvaluator.accuracy.metrics.classification import AccuracyMacro, AccuracyMicro, RecallMacro, RecallMicro
 
-class ImageClassificationAccuracyEvaluator(AccuracyEvaluator):
+class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
+    """Class for evaluating single input and single output computer vision models"""
     def __init__(self, model, deviceInterface, dataset):
         super().__init__(model, deviceInterface, dataset)
 
@@ -27,17 +26,10 @@ class ImageClassificationAccuracyEvaluator(AccuracyEvaluator):
         if not self.imageKey or not self.labelKey:
             raise ValueError(f"Dataset {self.dataset.name} does not contain features in required format.")
 
-
-    def _metrics(self):
-        return [
-            AccuracyMacro(), AccuracyMicro(), RecallMacro(), RecallMicro()
-        ]
-
-
     def _predict(self):
-        # self.targets = np.load("target.npy")
-        # self.predictions = np.load("preds.npy", allow_pickle=True)
-        # return
+        self.targets = np.load("target.npy")
+        self.predictions = np.load("preds.npy", allow_pickle=True)
+        return
         # Resize images
         inputShape : List[int] = self.modelInputs[0]["shape"]
         targetSize = (inputShape[1], inputShape[2])
@@ -109,9 +101,6 @@ class ImageClassificationAccuracyEvaluator(AccuracyEvaluator):
         self.predictions = np.array([x.argmax().item() for x in self.predictions])
 
 
-        self.predictions = np.array([x - 1 for x in self.predictions]) # Dataset has 1000 classes, model has 1001 outpus (index 0 is for background)
+        self.predictions = np.array([x - 1 for x in self.predictions]) # Dataset has 1000 classes, model has 1001 outpus (index 0 is for background) TODO remove
 
-        return EvaluationMetrics().compute(metrics=self._metrics(), predictions=self.predictions, targets=self.targets)
-
-    def _task(self):
-        return Model.SupportedTasks.IMAGE_CLASSIFICATION
+        return computeMetrics(metrics=self._metrics(), predictions=self.predictions, targets=self.targets)

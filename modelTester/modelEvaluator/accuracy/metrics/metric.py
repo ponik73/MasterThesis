@@ -1,12 +1,19 @@
 from abc import ABC, abstractmethod
-from typing import Set, Dict, List
+from typing import Type, Dict, List
 from numpy.typing import NDArray
+from pydantic import BaseModel
+
+class MetricResult(BaseModel):
+    # """Base model"""
+    name: str
+    value: float
+    # TODO: unit
 
 class Metric(ABC):
     """Abstract class for all evaluation metrics."""
     
     @abstractmethod
-    def compute(self, predictions: NDArray, targets: NDArray) -> float:
+    def compute(self, predictions: NDArray, targets: NDArray) -> MetricResult:
         """Computes the metric value."""
         pass
 
@@ -14,13 +21,3 @@ class Metric(ABC):
     def name(self) -> str:
         """Returns the name of the metric."""
         pass
-
-class EvaluationMetrics():
-    """Class for metrics computation."""
-    
-    def compute(self, metrics: List[Metric], predictions: NDArray, targets: NDArray) -> Dict[str, str]:
-        """Computes all defined metrics and returns them as a dictionary."""
-        results : Dict[str, str] = {}
-        for m in metrics:
-            results[m.name()] = str(m.compute(predictions, targets))
-        return results

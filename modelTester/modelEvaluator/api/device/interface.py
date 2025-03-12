@@ -6,13 +6,20 @@ from pydantic_core import Url
 from typing import Literal, List, Dict, Any
 
 from configuration import getSettings
-from .apiCalls import getFingerprintCall, uploadModelCall, getModelInputInfoTfliteCall, evaluateLatencyTfliteCall, predictTfliteCall
+from configurationHandler.configurations import Device
+from modelEvaluator.api.device.calls import getFingerprintCall, uploadModelCall, getModelInputInfoTfliteCall, evaluateLatencyTfliteCall, predictTfliteCall
 
 class DeviceInterface():
-    def __init__(self, url: Url, name: str):
-        self.url = url
-        self.name = name
+    def __init__(self, device: Device):
+        self.url : Url | None = None
+        self.device = device
         self.conn : HTTPConnection | None = None
+
+        self.url = Url.build(
+                scheme="http",
+                host=self.device.uri,
+                port=8000
+            )
         
         # try:
         #     # TODO: connect to the device: download, build, run docker fastapi
@@ -43,7 +50,7 @@ class DeviceInterface():
             # except asyncssh.TimeoutError as e:
             #     raise Exception(e)
 
-        async with await _createSshConnection(str(self.url)) as conn:
+        async with await _createSshConnection(str(self.device.uri)) as conn:
             # Pull device API docker image:
             result = await conn.run(f'docker pull {settings.DOCKER_DEVICE_API_PATH}')
             if result.exit_status != 0:
@@ -58,12 +65,11 @@ class DeviceInterface():
             
             # Store the port where container is running:
             self.url = Url.build(
-                scheme=self.url.scheme,
-                host=self.url.host,
+                self.device.uri,
                 port=port
             )
         
-    def getFingerprint(self) -> str | None:
+    def getFingerprint(self):
         try:
             callArgs = {
                 "headers": {
@@ -78,10 +84,9 @@ class DeviceInterface():
             if not fingerprint:
                 raise
             
-            return fingerprint
+            self.device.fingerprint = fingerprint
         except Exception as e:
             print(f'Unable to retrieve fingerprint of device: `{self.name}` at `{self.url}`. Reason: {e}')
-            return None
 
     def uploadModel(
             self,

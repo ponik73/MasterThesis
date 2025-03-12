@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from numpy.typing import NDArray
-from typing import Any, List
+from typing import Any, List, Dict, Type
+from pydantic import BaseModel
 
 from configurationHandler.configurations import Dataset, Model
-from modelEvaluator.device.interface import DeviceInterface
-from modelEvaluator.accuracy.metrics.metric import Metric
+from modelEvaluator.api.device.interface import DeviceInterface
+from modelEvaluator.accuracy.metrics.metric import Metric, MetricResult
+from modelEvaluator.accuracy.metrics.taskMetrics import getMetricsForTask
 
 class AccuracyEvaluator(ABC):
     """Abstract base class for accuracy evaluators."""
@@ -20,8 +22,8 @@ class AccuracyEvaluator(ABC):
         self.deviceInterface = deviceInterface
         self.dataset = dataset
 
-        self.predictions : NDArray[Any] | None = None
-        self.targets : NDArray[Any] | None = None
+        self.predictions : NDArray[Any] | None = None # Class variable for predictions
+        self.targets : NDArray[Any] | None = None # Class variable for ground truths
 
         # Get model input size from the API:
         self.modelInputs = deviceInterface.getModelInputInfo(
@@ -29,9 +31,8 @@ class AccuracyEvaluator(ABC):
             modelFramework=model.framework
         )
 
-    @abstractmethod
-    def _metrics(self) -> List[Metric]:
-        pass
+    def _metrics(self) -> List[Type[Metric]]:
+        return getMetricsForTask(self.model.task)
 
     @abstractmethod
     def _predict(self):
@@ -39,13 +40,24 @@ class AccuracyEvaluator(ABC):
         pass
 
     @abstractmethod
-    def _calculateMetrics(self):
-        pass
-
-    @abstractmethod
-    def _task(self) -> Model.SupportedTasks:
+    def _calculateMetrics(self) -> List[MetricResult]:
         pass
 
     def evaluate(self):
         self._predict()
-        return (self._task().value, self._calculateMetrics())
+        return self._calculateMetrics()
+    
+def computeMetrics(metrics: List[Type[Metric]], predictions: NDArray, targets: NDArray) -> List[MetricResult]:
+    """Computes all defined metrics and returns them as a dictionary."""
+    
+    results = []
+    for m in metrics:
+        metric = m()
+        results.append(
+            MetricResult(
+                name=metric.name(),
+                value=metric.compute(predictions, targets)
+            )
+        )
+
+    return results

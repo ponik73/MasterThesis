@@ -1,13 +1,10 @@
-# python modelTester.py --cfg=ahoj
-# python modelTester.py --cfg=../test/configs/first_cfg.json
-import os
 import argparse
+import numpy as np
+
 from configurationHandler.cfgParser import ConfigParser, cfgDesc
 from downloader.controller import DownloaderController
 from modelEvaluator.controller import EvaluatorController
 from configuration import getSettings
-
-#TODO: Maybe do this as server - request "test" with cfg file; request "report"
 
 argParser = argparse.ArgumentParser()
 argParser.add_argument("--cfg", type=str, action="store", dest="path_cfg", help="Path to config")
@@ -21,6 +18,9 @@ argParser.description = "a"
 # print("aa", file=sys.__stdout__)
 
 if __name__ == "__main__":
+    SEED = 690
+    np.random.seed(SEED)
+
     args = argParser.parse_args()
 
     # Print configuration file description:
@@ -54,6 +54,16 @@ if __name__ == "__main__":
     print("#"*10 + "\n" + "EXECUTING RUNS\n" + "#"*10 + "\n")
     evaluator.createPipelines()
     evaluator.executePipelines()
+
+    print("#"*10 + "\n" + "GENERATING REPORT\n" + "#"*10 + "\n")
+    report_path = evaluator.get_report()
+    
+    if report_path:    
+        print(f"Report saved at: {report_path.resolve()}")
+        if getSettings().REPORT_OPEN_IN_BROWSER:
+            import webbrowser
+            webbrowser.open(f"file://{report_path.resolve()}")
+
 
     
 
