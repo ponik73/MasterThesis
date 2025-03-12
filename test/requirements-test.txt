@@ -1,5 +1,6 @@
 -r ../modelTester/requirements.txt
 -r ../deviceInference/requirements.txt
+-r ../report/requirements.txt
 
 ruff
 mypy[reports]
