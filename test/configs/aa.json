@@ -22,9 +22,9 @@
     ],
     "runs": [
         {
-            "device": "localhost",
-            "model": "mobilenetv2",
-            "dataset": "mini_imagenet_classification"
+            "deviceName": "localhost",
+            "modelName": "mobilenetv2",
+            "datasetName": "mini_imagenet_classification"
         }
     ]
 }

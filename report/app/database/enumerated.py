@@ -1,11 +1,13 @@
 from enum import StrEnum
-from typing import Union
-
 
 class SupportedPlatforms(StrEnum):
     KAGGLE = "kaggle"
     HUGGING_FACE = "hf"
 
+platform_url_mapping = {
+    SupportedPlatforms.HUGGING_FACE: "https://huggingface.co",
+    SupportedPlatforms.KAGGLE: "https://www.kaggle.com"
+}
 
 class SupportModelFrameworks(StrEnum):
     TFLITE = "tflite"

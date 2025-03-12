@@ -35,9 +35,10 @@ if __name__ == "__main__":
     # Configuration handler - parse cfg file:
     cfgParser = ConfigParser(args.path_cfg)
     # Configuration for Downloader component:
-    configurationDownloader = cfgParser.getDownloaderCfg()
+    models, datasets = cfgParser.getDownloaderCfg()
     # Configuration for Model Evaluator component:
     devices, runs = cfgParser.getEvaluatorCfg()
+    # del cfgParser
 
     # Model Evaluator - initialization:
     print("#"*10 + "\n" + "DISCOVERING DEVICES\n" + "#"*10 + "\n")
@@ -45,7 +46,7 @@ if __name__ == "__main__":
 
     # Download items from model hubs:
     print("#"*10 + "\n" + "RETRIEVING DATA FROM MODEL HUBS\n" + "#"*10 + "\n")
-    downloader = DownloaderController(configurationDownloader)
+    downloader = DownloaderController(models, datasets)
     models, datasets = downloader.download()
     # Pass downloaded items to the Model Evaluator:
     evaluator.setModels(models)

@@ -1,7 +1,7 @@
 from sqlmodel import Field, SQLModel, Relationship
-from typing import List, Literal
+from typing import List, Dict, Literal
 
-from .enumerated import SupportModelFrameworks, SupportedModelTasks, SupportedPlatforms, MetricCategory
+from .enumerated import SupportModelFrameworks, SupportedModelTasks, SupportedPlatforms, MetricCategory, platform_url_mapping
 
 ############## DEVICE
 
@@ -38,13 +38,19 @@ class ModelBase(SQLModel):
     path: str = Field(index=True, unique=True)
     platform: SupportedPlatforms = Field(index=True)
 
+    @property
+    def platform_url(self) -> str:
+        """Returns the URL associated with the platform."""
+        
+        return platform_url_mapping.get(self.platform, "")
+
 # Table
 class Model(ModelBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     # resource_id: int = Field(foreign_key="resource.id", index=True, unique=True)
 
     # resource: Resource = Relationship(back_populates="models")
-    tests: List["Run"] = Relationship(back_populates="model")
+    tests: List["Run"] = Relationship(back_populates="model")    
 
 
 ############## DATASET
@@ -52,6 +58,12 @@ class Model(ModelBase, table=True):
 class DatasetBase(SQLModel):
     path: str = Field(index=True, unique=True)
     platform: SupportedPlatforms = Field(index=True)
+
+    @property
+    def platform_url(self) -> str:
+        """Returns the URL associated with the platform."""
+        
+        return platform_url_mapping.get(self.platform, "")
 
 # Base, Public, Table
 class Dataset(DatasetBase, table=True):

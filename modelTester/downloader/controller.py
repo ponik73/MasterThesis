@@ -2,7 +2,8 @@ import os
 import subprocess
 from pathlib import Path
 import tempfile
-from configurationHandler.configurations import supportedModelHubs, Model, Dataset
+from configurationHandler.configurations import SupportedModelHubs, SupportedModelFrameworks, Model, Dataset
+from typing import List, Union, Dict
 
 from huggingface_hub import hf_hub_download
 from datasets import load_dataset as hf_load_dataset
@@ -11,24 +12,28 @@ from datasets import DatasetDict as hfDatasetDict
 import kagglehub
 
 class DownloaderController():
-    def __init__(self, cfg: dict):
+    def __init__(self, models: List[Model], datasets: List[Dataset]):
         try:
-            self.cfg = cfg
-
             # Sort models and dataset by platform:
-            models = self.sortByModelHub("models")
-            datasets = self.sortByModelHub("datasets")
+            models_by_hub : Dict[SupportedModelHubs, Model] = self.sortByModelHub(models)
+            datasets_by_hub : Dict[SupportedModelHubs, Dataset] = self.sortByModelHub(datasets)
 
             # Create handlers for platforms:
-            self.handlerHf = HandlerHF(models["hf"], datasets["hf"])
-            self.handlerKaggle = HandlerKaggle(models["kaggle"], datasets["kaggle"])
+            self.handlerHf = HandlerHF(
+                models=models_by_hub[SupportedModelHubs.HUGGING_FACE],
+                datasets=datasets_by_hub[SupportedModelHubs.HUGGING_FACE]
+            )
+            self.handlerKaggle = HandlerKaggle(
+                models=models_by_hub[SupportedModelHubs.KAGGLE],
+                datasets=datasets_by_hub[SupportedModelHubs.KAGGLE]
+            )
         except Exception as ex:
             raise ex
         
-    def sortByModelHub(self, groupName: str):
+    def sortByModelHub(self, items: List[Union[Model, Dataset]]) -> Dict[SupportedModelHubs, Union[Model, Dataset]]:
         group = {}
-        for modelHub in supportedModelHubs:
-            group[modelHub] = [x for x in self.cfg[groupName] if x.platform == modelHub]
+        for _, modelHub in SupportedModelHubs.__members__.items():
+            group[modelHub] = [x for x in items if x.platform == modelHub]
         return group
     
     def download(self):
@@ -37,7 +42,7 @@ class DownloaderController():
         return [*modelsHf, *modelsKaggle], [*datasetsHf, *datasetsKaggle]
             
 class DownloadHandler():
-    def __init__(self, models: list[Model], datasets: list[Dataset]):
+    def __init__(self, models: List[Model], datasets: List[Dataset]):
         self.models = models
         self.datasets = datasets
         self.downloadModelFunc = None
@@ -45,14 +50,14 @@ class DownloadHandler():
         
     def download(self) -> tuple[list[Model], list[Dataset]]:
         self.downloadModels()
-        self.downloadDatasets() #DATASETS WILL BE ONLY LOCAL WITH DEFINED FORMAT - consult
+        self.downloadDatasets()
         return self.models, self.datasets
     
     def downloadModels(self):
         for m in self.models:
             try:
                 m.localPath = Path(self.downloadModelFunc(m.uri))
-                m.framework = Model.SupportedFrameworks(m.localPath.suffix.lstrip("."))
+                m.framework = SupportedModelFrameworks(m.localPath.suffix.lstrip("."))
                 print(f'{m.name} loaded')
             except Exception as ex:
                 m.localPath = None
@@ -73,9 +78,9 @@ class DownloadHandler():
                 print(f'Dataset "{d.name}" could not be loaded')
 
 class HandlerHF(DownloadHandler):
-    hubName = supportedModelHubs[0]
+    hubName = SupportedModelHubs.HUGGING_FACE
 
-    def __init__(self, models: list[Model], datasets: list[Dataset]):
+    def __init__(self, models, datasets):
         super().__init__(models, datasets)
         self.downloadModelFunc = lambda x: hf_hub_download(**self._parseModelUri(x))
         self.downloadDatasetFunc = self._downloadDataset
@@ -94,7 +99,7 @@ class HandlerHF(DownloadHandler):
         return ds
     
 class HandlerKaggle(DownloadHandler):
-    hubName = supportedModelHubs[1]
+    hubName = SupportedModelHubs.KAGGLE
 
     def __init__(self, models: list[Model], datasets: list[Dataset]):
         super().__init__(models, datasets)
