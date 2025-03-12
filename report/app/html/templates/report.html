@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test report</title>
+    <link rel="stylesheet" href="../static/style_report.css">
+<body>
+
+<!-- <section id="test-configuration">
+    <h2>Test Configuration</h2>
+    <h3>Testing Framework</h3>
+    <ul class="specs-list">
+        <li><strong>Testing Software:</strong> Version [Number]</li>
+        <li><strong>Testing Protocol:</strong> [Protocol Details]</li>
+        <li><strong>Environment:</strong> [Environment Details]</li>
+    </ul>
+</section> -->
+
+<section id="device-results">
+    <h2>Testing Results</h2>
+    
+    {% for res in results %}
+    <div class="device-card">
+        <div class="device-header">
+            <h2>Device: {{ res.device.fingerprint }} </h2>
+        </div>
+        <div class="device-content">
+            <h3>Device Specifications</h3>
+            <ul class="specs-list">
+                <li><strong>Fingerprint:</strong> {{ res.device.fingerprint }}</li>
+                <!-- <li><strong>Processor:</strong> [Processor Details]</li>
+                <li><strong>Memory:</strong> [Memory Details]</li>
+                <li><strong>Storage:</strong> [Storage Details]</li> -->
+            </ul>
+            {% for run in res.results %}   
+            <div class="run-card">
+                <!-- <div class="run-header">
+                    Run #1: Image Classification
+                </div> -->
+                <div class="run-content">
+                    <h4>Model Details</h4>
+                    <ul class="specs-list">
+                        <li><strong>Task:</strong> {{ run.model.task }}</li>
+                        <li><strong>Framework:</strong> {{ run.model.framework }}</li>
+                        <li><strong>Platform:</strong> {{ run.model.platform }}</li>
+                        <li><strong>Path:</strong> {{ run.model.path }}</li>
+                    </ul>
+
+                    <h4>Latency Metrics</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <!-- <th>Unit</th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for metric in run.latency_results %}
+                            <tr>
+                                <td>{{ metric.name }}</td>
+                                <td>{{ metric.value }}</td>
+                                <!-- <td>ms</td> -->
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <h4>Dataset</h4>
+                    <ul class="specs-list">
+                        <li><strong>Platform:</strong> {{ run.dataset.platform }}</li>
+                        <li><strong>Path:</strong> {{ run.dataset.path }}</li>
+                    </ul>
+                    
+                    <h4>Accuracy Metrics</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <!-- <th>Unit</th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for metric in run.latency_results %}
+                            <tr>
+                                <td>{{ metric.name }}</td>
+                                <td>{{ metric.value }}</td>
+                                <!-- <td>ms</td> -->
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+   
+</section>
+
+<!-- <section id="comparative-analysis" class="comparative-section">
+    <h2>Cross-Device Comparative Analysis</h2>
+    
+    <h3>Latency Comparison by Task Type</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Device Fingerprint</th>
+                <th>Image Tasks (ms)</th>
+                <th>NLP Tasks (ms)</th>
+                <th>Audio Tasks (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ED-7X92-A4F5-11B</td>
+                <td>45.7</td>
+                <td>67.3</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>ED-6C33-B7D2-09A</td>
+                <td>78.2 (Object) / 92.6 (Pose)</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>ED-8F45-C2E1-77D</td>
+                <td>134.8 (Segmentation)</td>
+                <td>-</td>
+                <td>112.3</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h3>Memory Usage Across Devices</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Device Fingerprint</th>
+                <th>Average Memory Usage (MB)</th>
+                <th>Peak Memory Usage (MB)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ED-7X92-A4F5-11B</td>
+                <td>37.1</td>
+                <td>41.7</td>
+            </tr>
+            <tr>
+                <td>ED-6C33-B7D2-09A</td>
+                <td>50.1</td>
+                <td>52.3</td>
+            </tr>
+            <tr>
+                <td>ED-8F45-C2E1-77D</td>
+                <td>70.4</td>
+                <td>76.5</td>
+            </tr>
+        </tbody>
+    </table>
+</section> -->
+</body>

@@ -1,0 +1,6 @@
+numpy
+fastapi[standard]
+sqlmodel
+pydantic
+pydantic-core
+pydantic-settings
