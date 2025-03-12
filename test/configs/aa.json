@@ -1,0 +1,30 @@
+{
+    "devices": [
+        {
+            "uri": "localhost",
+            "name": "localhost"
+        }
+    ],
+    "models": [
+        {
+            "name": "mobilenetv2",
+            "task": "image-classification",
+            "platform": "hf",
+            "uri": "qualcomm/MobileNet-v2/blob/93143d3ceac0f575d3641f4333009c5b648bb1a0/MobileNet-v2.tflite"
+        }
+    ],
+    "datasets": [
+        {
+            "name": "mini_imagenet_classification",
+            "platform": "kaggle",
+            "uri": "deeptrial/miniimagenet"
+        }
+    ],
+    "runs": [
+        {
+            "device": "localhost",
+            "model": "mobilenetv2",
+            "dataset": "mini_imagenet_classification"
+        }
+    ]
+}
