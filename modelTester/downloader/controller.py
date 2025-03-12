@@ -90,18 +90,8 @@ class HandlerHF(DownloadHandler):
         }
     
     def _downloadDataset(self, uri: str):
-        # TODO: check with Barbora
-        # TODO: add "split" option to cfg - datasets; only if HF
-        # TODO: add "split" parameter to configurationHanlder.configurations.Dataset - datasets; only if HF
-        # TODO: idk if use "streaming" - consultate or compare performance
-        # TODO: hugginface dataset - 
-        #       define features - e.g. (image classification: "img", "label"; do it in preprocess script => take X images, preprocess for model, save + create csv with "img, label" tuples (new param in datasetcfg?))
-        #       or DATASETS WILL BE ONLY LOCAL WITH DEFINED FORMAT (likey likey)
         ds = hf_load_dataset(uri)
         return ds
-        # TODO: move to the handling function along with kaggle dataset - ds = load_dataset(localPath) # hf datasets library
-        # print(ds[0]['image'])
-        # .select_columns(['image', 'label'])
     
 class HandlerKaggle(DownloadHandler):
     hubName = supportedModelHubs[1]
@@ -115,6 +105,3 @@ class HandlerKaggle(DownloadHandler):
         localPath = kagglehub.dataset_download(uri)
         ds = hf_load_dataset(localPath)
         return ds
-
-
-    #TODO: ds = load_dataset(localPath) # hf datasets library
