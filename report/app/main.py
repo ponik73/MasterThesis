@@ -33,7 +33,6 @@ def get_session():
 ################## HTML
 
 jinja_env = Environment(loader=FileSystemLoader("html/templates"))
-app.mount("/static", StaticFiles(directory="html/static"), name="static")
 
 ################## LIFESPAN TODO       
 
