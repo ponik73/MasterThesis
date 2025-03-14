@@ -1,5 +1,5 @@
 from typing import Dict
-from configurationHandler.configurations import SupportedTasks
+from configurationHandler.schemas import SupportedTasks
 from .cv.singleInputSingleOutput import SingleInputSingleOutputAccuracyEvaluator
 
 # EVALUATOR_REGISTRY : Dict[Model.SupportedTasks, AccuracyEvaluator] = {

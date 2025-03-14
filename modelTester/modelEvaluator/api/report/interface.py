@@ -5,7 +5,7 @@ from pathlib import Path
 from pydantic_core import Url
 from typing import Tuple, List
 
-from configurationHandler.configurations import Device, Model, Dataset
+from configurationHandler.schemas import Device, Model, Dataset
 from configuration import getSettings
 from modelEvaluator.api.report.calls import register_run_call, generate_report_call
 from modelEvaluator.accuracy.metrics.metric import MetricResult

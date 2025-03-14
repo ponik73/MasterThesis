@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from typing import Any, List, Dict, Type
 from pydantic import BaseModel
 
-from configurationHandler.configurations import Dataset, Model
+from configurationHandler.schemas import Dataset, Model
 from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.accuracy.metrics.metric import Metric, MetricResult
 from modelEvaluator.accuracy.metrics.taskMetrics import getMetricsForTask

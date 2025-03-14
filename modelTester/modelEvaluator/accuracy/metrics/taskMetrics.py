@@ -2,7 +2,7 @@ from typing import Dict, List, Type
 
 from modelEvaluator.accuracy.metrics.metric import Metric
 from modelEvaluator.accuracy.metrics import classification
-from configurationHandler.configurations import Model, SupportedTasks
+from configurationHandler.schemas import Model, SupportedTasks
 
 TASK_METRIC_MAPPING : Dict[SupportedTasks, List[type[Metric]]] = {
     SupportedTasks.IMAGE_CLASSIFICATION : [

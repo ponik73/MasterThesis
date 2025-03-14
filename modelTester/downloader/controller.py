@@ -2,7 +2,7 @@ import os
 import subprocess
 from pathlib import Path
 import tempfile
-from configurationHandler.configurations import SupportedModelHubs, SupportedModelFrameworks, Model, Dataset
+from configurationHandler.schemas import SupportedModelHubs, SupportedModelFrameworks, Model, Dataset
 from typing import List, Union, Dict
 
 from huggingface_hub import hf_hub_download

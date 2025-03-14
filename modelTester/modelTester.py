@@ -1,14 +1,14 @@
 import argparse
 import numpy as np
 
-from configurationHandler.cfgParser import ConfigParser, cfgDesc
+from configurationHandler.cfgParser import ConfigParser
 from downloader.controller import DownloaderController
 from modelEvaluator.controller import EvaluatorController
 from configuration import getSettings
 
 argParser = argparse.ArgumentParser()
 argParser.add_argument("--cfg", type=str, action="store", dest="path_cfg", help="Path to config")
-argParser.add_argument("--cfg-help", default=False, action="store_true", help="Prints configuration file description.")
+# argParser.add_argument("--cfg-help", default=False, action="store_true", help="Prints configuration file description.")
 
 argParser.usage = f'<pyhon> modelTester.py --cfg=<PATH_CFG>'
 argParser.description = "a"
@@ -23,10 +23,6 @@ if __name__ == "__main__":
 
     args = argParser.parse_args()
 
-    # Print configuration file description:
-    if args.cfg_help:
-        print(cfgDesc)
-        exit(0)
     # Required argument for application run:
     if not args.path_cfg:
         print("the following arguments are required: --cfg")

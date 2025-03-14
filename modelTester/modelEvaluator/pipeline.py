@@ -6,7 +6,7 @@ from modelEvaluator.accuracy.evaluator.accuracyEvaluatorFactory import accuracyE
 from modelEvaluator.accuracy.metrics.metric import MetricResult
 from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.latency.parserFactory import latencyParserFactory
-from configurationHandler.configurations import Model, Dataset
+from configurationHandler.schemas import Model, Dataset
 
 class RunPipeline():
     def __init__(

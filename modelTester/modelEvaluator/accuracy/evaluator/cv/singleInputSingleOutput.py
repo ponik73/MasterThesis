@@ -6,7 +6,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 
 from modelEvaluator.api.utils import encodeData, decodeData
-from configurationHandler.configurations import Model
+from configurationHandler.schemas import Model
 from ..accuracyEvaluator import AccuracyEvaluator, computeMetrics
 from .utils import resizeImages
 

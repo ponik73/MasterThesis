@@ -6,7 +6,7 @@ from pydantic_core import Url
 from typing import Literal, List, Dict, Any
 
 from configuration import getSettings
-from configurationHandler.configurations import Device
+from configurationHandler.schemas import Device
 from modelEvaluator.api.device.calls import getFingerprintCall, uploadModelCall, getModelInputInfoTfliteCall, evaluateLatencyTfliteCall, predictTfliteCall
 
 class DeviceInterface():

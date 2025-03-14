@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import json
 from typing import Tuple, List
-from configurationHandler.configurations import Device, Model, Dataset, Run, SupportedModelHubs, Config #, DownloaderConfiguration
+from .schemas import Device, Model, Dataset, Run, SupportedModelHubs, Config #, DownloaderConfiguration
 
 class ConfigParser():
     """Configuration parser - class for parsing given configuration file (--cfg argument).
@@ -73,35 +73,3 @@ class ConfigParser():
         """Returns configuration for Model Evaluator component (parsed devices and runs)"""
         return self.cfg.devices, self.cfg.runs
     
-# TODO: rework
-cfgDesc = "" 
-# cfgDesc = """
-# Configuration file must contain arrays of objects specified below.
-
-# Arrays:
-# ------------------
-# - devices,
-# - models,
-# - datasets,
-# - runs.
-
-# Object attributes:
-# ------------------
-# Devices:
-# - name (custom device name),
-# - uri (device's reachable location).
-# Models:
-# - name (custom model name),
-# - task """ + str(Model.SupportedTasks.__members__.items()) + """,
-# - input_shape (list of integers representing model's input shape),
-# - platform """ + str(supportedModelHubs) + """,
-# - uri (location within platform).
-# Datasets:
-# - name (custom dataset name),
-# - platform """ + str(supportedModelHubs) + """,
-# - uri (location within platform).
-# Runs:
-# - device (name of the selected device),
-# - model (name of the model device),
-# - dataset (name of the dataset device),
-# """

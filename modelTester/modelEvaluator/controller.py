@@ -1,4 +1,4 @@
-from configurationHandler.configurations import Device, Run, Model, Dataset
+from configurationHandler.schemas import Device, Run, Model, Dataset
 from typing import List, Tuple
 from pydantic_core import Url
 from collections import defaultdict
