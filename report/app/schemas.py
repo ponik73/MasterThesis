@@ -31,6 +31,3 @@ class RegisterRunOutput(BaseModel):
 
 class GetReportInput(BaseModel):
     run_ids: List[int]
-
-class GetReportOutput(BaseModel):
-    html: str # TODO

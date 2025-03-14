@@ -1,5 +1,6 @@
 from sqlmodel import Field, SQLModel, Relationship
 from typing import List, Dict, Literal
+from datetime import datetime, timezone
 
 from .enumerated import SupportModelFrameworks, SupportedModelTasks, SupportedPlatforms, MetricCategory, platform_url_mapping
 
@@ -78,6 +79,7 @@ class Dataset(DatasetBase, table=True):
 # Base, Public, Table
 class Run(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    created_datetime : datetime = Field(default=datetime.now(timezone.utc))
     device_id: int = Field(foreign_key="device.id")
     model_id: int = Field(foreign_key="model.id")
     dataset_id: int = Field(foreign_key="dataset.id")
