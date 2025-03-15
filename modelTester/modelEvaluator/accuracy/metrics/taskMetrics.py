@@ -9,7 +9,13 @@ TASK_METRIC_MAPPING : Dict[SupportedTasks, List[type[Metric]]] = {
         classification.AccuracyMacro,
         classification.AccuracyMicro,
         classification.RecallMacro,
-        classification.RecallMicro
+        classification.RecallMicro,
+        classification.F1Macro,
+        classification.F1Micro,
+        classification.PrecisionMacro,
+        classification.PrecisionMicro,
+        classification.SpecificityMacro,
+        classification.SpecificityMicro,
     ]
 }
 
