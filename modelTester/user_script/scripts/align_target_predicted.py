@@ -20,5 +20,3 @@ class AlignTargetPredictedScript(UserScript):
     def __init__(self, script_path):
         super().__init__(script_path)
         self.required_functions.append(AlignTargetPredictedFunction())
-    # def required_functions(self):
-    #     return [AlignTargetPredictedFunction()]

@@ -17,16 +17,8 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
     def __init__(self, model, deviceInterface, dataset):
         super().__init__(model, deviceInterface, dataset)
 
-        # Get the name of the feature which contains images:
-        self.imageKey : str | None = None # TODO: specify in config
-        self.labelKey : str | None = None # TODO: specify in config
-        for key, value in dataset.dataset.features.items():
-            if isinstance(value, features.image.Image):
-                self.imageKey = key
-            if isinstance(value, features.features.ClassLabel):
-                self.labelKey = key
-        if not self.imageKey or not self.labelKey:
-            raise ValueError(f"Dataset {self.dataset.name} does not contain features in required format.")
+        self.imageKey = dataset.dataset_keys.get("input", None)
+        self.labelKey = dataset.dataset_keys.get("target", None)
 
     def load_align_function(self):
         required_function_name = "align_target_predicted"

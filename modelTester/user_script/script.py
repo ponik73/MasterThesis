@@ -4,7 +4,6 @@ from pathlib import Path
 from types import ModuleType
 from importlib.util import spec_from_file_location, module_from_spec
 import inspect
-from pydantic import BaseModel
 
 class RequiredFunction(ABC):
     def __init__(self):
@@ -24,16 +23,6 @@ class RequiredFunction(ABC):
     @abstractmethod
     def call(self):
         pass
-
-    # @abstractmethod
-    # @property
-    # def rtype() -> Type:
-    #     pass
-
-    # @abstractmethod
-    # def set_params():
-    #     pass
-    
     
 
 class UserScript(ABC):
@@ -41,10 +30,6 @@ class UserScript(ABC):
         self.script_path = script_path
         self.module : ModuleType | None = None
         self.required_functions : List[RequiredFunction] = []
-
-    # @abstractmethod
-    # def required_functions(self) -> List[RequiredFunction]:
-    #     pass
 
     def get_function_by_name(self, name:str) -> RequiredFunction | None:
         for f in self.required_functions:

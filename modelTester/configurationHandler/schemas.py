@@ -2,7 +2,7 @@ from pathlib import Path
 from datasets import Dataset as HuggingFaceDataset
 from enum import StrEnum
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 
 class SupportedModelHubs(StrEnum):
     KAGGLE = "kaggle"
@@ -37,11 +37,11 @@ class Dataset(BaseModel):
     name: str
     platform: SupportedModelHubs
     uri: str
+    dataset_keys: Dict[str, str]
     dataset : HuggingFaceDataset | None = None
     distinctAttributes : List[str] = ["name"]
     class Config:
         arbitrary_types_allowed = True
-    
 
 class Run(BaseModel):
     deviceName: str

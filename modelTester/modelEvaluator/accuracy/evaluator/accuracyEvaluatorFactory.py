@@ -9,7 +9,7 @@ EVALUATOR_REGISTRY = {
     # Model.SupportedTasks.IMAGE_CLASSIFICATION: ImageClassificationAccuracyEvaluator,
     SupportedTasks.IMAGE_CLASSIFICATION: SingleInputSingleOutputAccuracyEvaluator,
     SupportedTasks.OBJECT_DETECTION: ObjectDetectionAccuracyEvaluator, # TODO: implement evaluator
-    SupportedTasks.SEMANTIC_SEGMENTATION: SemanticSegmentationAccuracyEvaluator, # TODO: implement evaluator
+    SupportedTasks.SEMANTIC_SEGMENTATION: SemanticSegmentationAccuracyEvaluator,
 }
 
 def accuracyEvaluatorFactory(task: SupportedTasks):

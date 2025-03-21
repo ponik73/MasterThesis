@@ -17,8 +17,8 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
     def __init__(self, model, deviceInterface, dataset):
         super().__init__(model, deviceInterface, dataset)
 
-        self.imageKey = 'image' #TODO: specify in cfg
-        self.annotationKey = 'annotation' #TODO: specify in cfg
+        self.imageKey = dataset.dataset_keys.get("input", None)
+        self.annotationKey = dataset.dataset_keys.get("target", None)
 
     def load_align_function(self):
         required_function_name = "align_target_predicted"
