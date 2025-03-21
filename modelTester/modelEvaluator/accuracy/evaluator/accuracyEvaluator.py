@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from numpy.typing import NDArray
 from typing import Any, List, Dict, Type
 from pydantic import BaseModel
+from torch.types import Tensor
 
 from configurationHandler.schemas import Dataset, Model
 from modelEvaluator.api.device.interface import DeviceInterface
@@ -22,42 +23,40 @@ class AccuracyEvaluator(ABC):
         self.deviceInterface = deviceInterface
         self.dataset = dataset
 
-        self.predictions : NDArray[Any] | None = None # Class variable for predictions
-        self.targets : NDArray[Any] | None = None # Class variable for ground truths
-
         # Get model input size from the API:
         self.modelInputs = deviceInterface.getModelInputInfo(
             modelCustomName=model.name,
             modelFramework=model.framework
         )
 
+        self.metrics : List[Metric] = []
+
     def _metrics(self) -> List[Type[Metric]]:
         return getMetricsForTask(self.model.task)
-
-    @abstractmethod
-    def _predict(self):
-        """Execute inference and store predictions and ground truths into class variables."""
-        pass
-
-    @abstractmethod
-    def _calculateMetrics(self) -> List[MetricResult]:
-        pass
-
-    def evaluate(self):
-        self._predict()
-        return self._calculateMetrics()
     
-def computeMetrics(metrics: List[Type[Metric]], predictions: NDArray, targets: NDArray) -> List[MetricResult]:
-    """Computes all defined metrics and returns them as a dictionary."""
-    
-    results = []
-    for m in metrics:
-        metric = m()
-        results.append(
-            MetricResult(
-                name=metric.name(),
-                value=metric.compute(predictions, targets)
+    def initMetrics(self, **kwargs):
+        for m in self._metrics():
+            self.metrics.append(m(**kwargs))
+
+    def updateMetrics(self, predictions: Tensor, targets: Tensor):
+        for m in self.metrics:
+            m.update(predictions, targets)
+
+    def computeMetrics(self) -> List[MetricResult]:
+        """Computes all defined metrics and returns them as a dictionary."""
+        
+        results = []
+        for m in self.metrics:
+            results.append(
+                MetricResult(
+                    name=m.name(),
+                    value=m.compute()
+                )
             )
-        )
 
-    return results
+        return results
+    
+    @abstractmethod
+    def evaluate(self):
+        """Intialize metrics, execute inference and update metrics. Return computed metrics."""
+        pass

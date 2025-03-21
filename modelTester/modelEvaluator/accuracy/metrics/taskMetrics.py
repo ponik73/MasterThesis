@@ -2,20 +2,24 @@ from typing import Dict, List, Type
 
 from modelEvaluator.accuracy.metrics.metric import Metric
 from modelEvaluator.accuracy.metrics import classification
+from modelEvaluator.accuracy.metrics import semantic_segmentation
 from configurationHandler.schemas import Model, SupportedTasks
 
 TASK_METRIC_MAPPING : Dict[SupportedTasks, List[type[Metric]]] = {
     SupportedTasks.IMAGE_CLASSIFICATION : [
-        classification.AccuracyMacro,
+        # classification.AccuracyMacro,
         classification.AccuracyMicro,
-        classification.RecallMacro,
-        classification.RecallMicro,
-        classification.F1Macro,
-        classification.F1Micro,
-        classification.PrecisionMacro,
-        classification.PrecisionMicro,
-        classification.SpecificityMacro,
-        classification.SpecificityMicro,
+        # classification.RecallMacro,
+        # classification.RecallMicro,
+        # classification.F1Macro,
+        # classification.F1Micro,
+        # classification.PrecisionMacro,
+        # classification.PrecisionMicro,
+        # classification.SpecificityMacro,
+        # classification.SpecificityMicro,
+    ],
+    SupportedTasks.SEMANTIC_SEGMENTATION : [
+        semantic_segmentation.MeanIntersectionOverUnion
     ]
 }
 

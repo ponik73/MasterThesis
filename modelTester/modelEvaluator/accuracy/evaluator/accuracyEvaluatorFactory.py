@@ -1,13 +1,15 @@
 from typing import Dict
 from configurationHandler.schemas import SupportedTasks
 from .cv.singleInputSingleOutput import SingleInputSingleOutputAccuracyEvaluator
+from .cv.object_detection import ObjectDetectionAccuracyEvaluator
+from .cv.semantic_segmentation import SemanticSegmentationAccuracyEvaluator
 
 # EVALUATOR_REGISTRY : Dict[Model.SupportedTasks, AccuracyEvaluator] = {
 EVALUATOR_REGISTRY = {
     # Model.SupportedTasks.IMAGE_CLASSIFICATION: ImageClassificationAccuracyEvaluator,
     SupportedTasks.IMAGE_CLASSIFICATION: SingleInputSingleOutputAccuracyEvaluator,
-    # Model.SupportedTasks.OBJECT_DETECTION: AccuracyEvaluator, # TODO: implement evaluator
-    # Model.SupportedTasks.SEMANTIC_SEGMENTATION: AccuracyEvaluator, # TODO: implement evaluator
+    SupportedTasks.OBJECT_DETECTION: ObjectDetectionAccuracyEvaluator, # TODO: implement evaluator
+    SupportedTasks.SEMANTIC_SEGMENTATION: SemanticSegmentationAccuracyEvaluator, # TODO: implement evaluator
 }
 
 def accuracyEvaluatorFactory(task: SupportedTasks):

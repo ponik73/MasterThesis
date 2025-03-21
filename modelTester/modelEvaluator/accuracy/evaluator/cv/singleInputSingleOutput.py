@@ -3,12 +3,14 @@ from PIL import Image
 from typing import List, Tuple, Any, Dict
 from pathlib import Path
 import numpy as np
+import torch
 from torch.utils.data import DataLoader
 
 from modelEvaluator.api.utils import encodeData, decodeData
 from configurationHandler.schemas import Model
-from ..accuracyEvaluator import AccuracyEvaluator, computeMetrics
+from ..accuracyEvaluator import AccuracyEvaluator
 from .utils import resizeImages
+from user_script.scripts.align_target_predicted import AlignTargetPredictedScript, AlignTargetPredictedFunction
 
 class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
     """Class for evaluating single input and single output computer vision models"""
@@ -16,8 +18,8 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
         super().__init__(model, deviceInterface, dataset)
 
         # Get the name of the feature which contains images:
-        self.imageKey : str | None = None
-        self.labelKey : str | None = None
+        self.imageKey : str | None = None # TODO: specify in config
+        self.labelKey : str | None = None # TODO: specify in config
         for key, value in dataset.dataset.features.items():
             if isinstance(value, features.image.Image):
                 self.imageKey = key
@@ -26,10 +28,22 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
         if not self.imageKey or not self.labelKey:
             raise ValueError(f"Dataset {self.dataset.name} does not contain features in required format.")
 
-    def _predict(self):
-        self.targets = np.load("target.npy")
-        self.predictions = np.load("preds.npy", allow_pickle=True)
-        return
+    def load_align_function(self):
+        required_function_name = "align_target_predicted"
+        
+        script_path = Path("/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/mobilenetv1_mini_imagenet_classification.py") # TODO: specify config (run specific)
+        script = AlignTargetPredictedScript(script_path)
+        script.load()
+        
+        align_function : AlignTargetPredictedFunction | None = script.get_function_by_name(required_function_name)
+        if align_function is None:
+            raise Exception("TODO")
+        return align_function
+
+
+    def evaluate(self):
+        align_function = self.load_align_function()
+
         # Resize images
         inputShape : List[int] = self.modelInputs[0]["shape"]
         targetSize = (inputShape[1], inputShape[2])
@@ -48,7 +62,8 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
             if np.issubdtype(inputDtype, np.integer):
                 images = np.array([x[self.imageKey] for x in batch]).astype(inputDtype)
             elif np.issubdtype(inputDtype, np.floating):
-                images = np.array([x[self.imageKey] / 255.0 for x in batch]).astype(inputDtype)
+                images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(inputDtype)
+                images = np.array([x[self.imageKey] for x in batch]).astype(inputDtype)
             else:
                 raise ValueError("TODO")
             
@@ -65,12 +80,6 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
             images : np.typing.NDArray[Any] = batch[self.imageKey]
             labels : np.typing.NDArray[Any] = batch[self.labelKey]
             
-            if self.targets is None:
-                self.targets = np.array(labels)
-            else:
-                # self.targets = np.concatenate((self.targets, [labels]))
-                self.targets = np.append(self.targets, labels, axis=0)
-            
             mappingInputData : List[Dict[int, np.typing.NDArray[Any]]] = [{inputIdx: x} for x in images]
 
             # Inference:
@@ -83,24 +92,13 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
                 raise Exception(f'[{self.deviceInterface.name}] Error during on device inference.')
             
             # Decode inference result and append it to the predictions:
-            modelOutputs : List[Dict[int, np.typing.NDArray[Any]]] = decodeData(encodedOutputs)
-            if self.predictions is None:
-                self.predictions = np.array(modelOutputs)
-            else:
-                self.predictions = np.append(self.predictions, modelOutputs, axis=0)
-    
-    
-    def _calculateMetrics(self):
-        # TODO: model-dataset label mapping?
-
-        # Single output index:
-        outputIdx = list(self.predictions.item(0).keys())[0]
-        # Exctract the output values:
-        self.predictions = np.array([x[outputIdx] for x in self.predictions])
-        # Argmax:
-        self.predictions = np.array([x.argmax().item() for x in self.predictions])
-
-
-        self.predictions = np.array([x - 1 for x in self.predictions]) # Dataset has 1000 classes, model has 1001 outpus (index 0 is for background) TODO remove
-
-        return computeMetrics(metrics=self._metrics(), predictions=self.predictions, targets=self.targets)
+            modelOutputs : List[Dict[int, np.typing.NDArray[Any]]] = np.array(decodeData(encodedOutputs))
+            
+            predictions, targets, num_classes = align_function.call(predictions=modelOutputs, targets=labels)
+            if len(self.metrics) == 0:
+                self.initMetrics(**{"num_classes": num_classes})
+            
+            self.updateMetrics(torch.tensor(predictions), torch.tensor(targets))
+        
+        return self.computeMetrics()
+        
