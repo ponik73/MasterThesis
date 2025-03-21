@@ -1,15 +1,14 @@
-import os
-import subprocess
+from huggingface_hub import hf_hub_download as huggingface_hub_download
+from datasets import load_dataset as huggingface_load_dataset
+from datasets import concatenate_datasets as huggingface_concatenate_datasets
+from datasets import Dataset as HuggingFaceDataset
+from datasets import DatasetDict as HuggingFaceDatasetDict
+import kagglehub
+
 from pathlib import Path
-import tempfile
-from configurationHandler.schemas import SupportedModelHubs, SupportedModelFrameworks, Model, Dataset
 from typing import List, Union, Dict
 
-from huggingface_hub import hf_hub_download
-from datasets import load_dataset as hf_load_dataset
-from datasets import Dataset as hfDataset
-from datasets import DatasetDict as hfDatasetDict
-import kagglehub
+from configurationHandler.schemas import SupportedModelHubs, SupportedModelFrameworks, Model, Dataset
 
 class DownloaderController():
     def __init__(self, models: List[Model], datasets: List[Dataset]):
@@ -68,9 +67,9 @@ class DownloadHandler():
         for d in self.datasets:
             try:
                 ds = self.downloadDatasetFunc(d.uri)
-                if isinstance(ds, hfDatasetDict):
-                    ds = ds[next(iter(ds))]
-                if not isinstance(ds, hfDataset):
+                if isinstance(ds, HuggingFaceDatasetDict):
+                    ds = huggingface_concatenate_datasets(list(ds.values()))
+                if not isinstance(ds, HuggingFaceDataset):
                     raise Exception
                 d.dataset = ds
                 print(f'{d.name} loaded')
@@ -82,7 +81,7 @@ class HandlerHF(DownloadHandler):
 
     def __init__(self, models, datasets):
         super().__init__(models, datasets)
-        self.downloadModelFunc = lambda x: hf_hub_download(**self._parseModelUri(x))
+        self.downloadModelFunc = lambda x: huggingface_hub_download(**self._parseModelUri(x))
         self.downloadDatasetFunc = self._downloadDataset
     
     def _parseModelUri(self, uri: str) -> tuple[str, str, str]:
@@ -95,7 +94,7 @@ class HandlerHF(DownloadHandler):
         }
     
     def _downloadDataset(self, uri: str):
-        ds = hf_load_dataset(uri)
+        ds = huggingface_load_dataset(uri, trust_remote_code=True)
         return ds
     
 class HandlerKaggle(DownloadHandler):
@@ -103,10 +102,10 @@ class HandlerKaggle(DownloadHandler):
 
     def __init__(self, models: list[Model], datasets: list[Dataset]):
         super().__init__(models, datasets)
-        self.downloadModelFunc = kagglehub.model_download
+        self.downloadModelFunc = lambda x: [f for f in Path(kagglehub.model_download(x)).iterdir()][0]
         self.downloadDatasetFunc = self._downloadDataset
 
-    def _downloadDataset(self, uri: str) -> hfDataset | hfDatasetDict:
+    def _downloadDataset(self, uri: str) -> HuggingFaceDataset | HuggingFaceDatasetDict:
         localPath = kagglehub.dataset_download(uri)
-        ds = hf_load_dataset(localPath)
+        ds = huggingface_load_dataset(localPath)
         return ds
