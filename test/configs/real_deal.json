@@ -7,40 +7,16 @@
     ],
     "models": [
         {
-            "name": "mobilenetv2",
+            "name": "mobilenetv1",
             "task": "image-classification",
-            "platform": "hf",
-            "uri": "qualcomm/MobileNet-v2/blob/93143d3ceac0f575d3641f4333009c5b648bb1a0/MobileNet-v2.tflite"
-        },
-        {
-            "name": "resnet101",
-            "task": "image-classification",
-            "platform": "hf",
-            "uri": "qualcomm/ResNet101/blob/0644aa45aa3eca1e06213ccdc2f95d9111668dcd/ResNet101.tflite"
-        },
-        {
-            "name": "TODO find model",
-            "task": "object-detection",
             "platform": "kaggle",
-            "uri": "tensorflow/efficientnet/tfLite/lite0-fp32/1"
+            "uri": "tensorflow/mobilenet-v1/tfLite/1-0-224-quantized"
         },
         {
-            "name": "TODO find model",
-            "task": "object-detection",
-            "platform": "kaggle",
-            "uri": "tensorflow/efficientnet/tfLite/lite0-fp32/1"
-        },
-        {
-            "name": "TODO find model",
+            "name": "deeplabv3",
             "task": "semantic-segmentation",
             "platform": "kaggle",
-            "uri": "tensorflow/efficientnet/tfLite/lite0-fp32/1"
-        },
-        {
-            "name": "TODO find model",
-            "task": "semantic-segmentation",
-            "platform": "kaggle",
-            "uri": "tensorflow/efficientnet/tfLite/lite0-fp32/1"
+            "uri": "tensorflow/deeplabv3/tfLite/default"
         }
     ],
     "datasets": [
@@ -50,26 +26,21 @@
             "uri": "deeptrial/miniimagenet"
         },
         {
-            "name": "_detection",
-            "platform": "",
-            "uri": ""
-        },
-        {
-            "name": "_segmentation",
-            "platform": "",
-            "uri": ""
+            "name": "pascal_voc_2012_semantic_segmentation",
+            "platform": "hf",
+            "uri": "jakubkasem/pascal_voc_2012"
         }
     ],
     "runs": [
         {
-            "device": "localhost",
-            "model": "mobilenetv2",
-            "dataset": "mini_imagenet_classification"
+            "deviceName": "localhost",
+            "modelName": "mobilenetv1",
+            "datasetName": "mini_imagenet_classification"
         },
         {
-            "device": "localhost",
-            "model": "resnet101",
-            "dataset": "mini_imagenet_classification"
+            "deviceName": "localhost",
+            "modelName": "deeplabv3",
+            "datasetName": "pascal_voc_2012_semantic_segmentation"
         }
     ]
 }
