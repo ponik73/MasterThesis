@@ -1,7 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
-from fastapi.responses import StreamingResponse
-from io import BytesIO
+from fastapi.responses import Response
 
 from .schemas import LatencyOutput
 from .services import latencyAssessment, accuracyAssessment
@@ -47,7 +46,7 @@ async def evaluateAccuracyTFLite(
     if not modelPath or not modelPath.exists() or not modelPath.is_file():
         raise HTTPException(status_code=500, detail=f"Model not found.")
 
-    return StreamingResponse(
-        BytesIO(accuracyAssessment(".tflite", modelPath, batch)),
+    return Response(
+        content=accuracyAssessment(".tflite", modelPath, batch),
         media_type="application/octet-stream"
-        )
+    )
