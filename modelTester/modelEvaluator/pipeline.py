@@ -1,32 +1,35 @@
 from __future__ import annotations
-from typing import List, Tuple
-from pydantic import BaseModel
+from typing import List, Tuple, Dict
 
 from modelEvaluator.accuracy.evaluator.accuracyEvaluatorFactory import accuracyEvaluatorFactory
 from modelEvaluator.accuracy.metrics.metric import MetricResult
 from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.latency.parserFactory import latencyParserFactory
-from configurationHandler.schemas import Model, Dataset
+from configurationHandler.schemas import Model, Dataset, Run
 
 class RunPipeline():
     def __init__(
             self,
             deviceInterface: DeviceInterface,
-            pairsModelDataset: List[Tuple[Model, Dataset]]
+            runSettings: List[Tuple[Model, Dataset, Dict[str, str]]]
+            # pairsModelDataset: List[Tuple[Model, Dataset]]
     ):
         self.deviceInterface = deviceInterface
-        self.pairsModelDataset = pairsModelDataset
+        # self.pairsModelDataset = pairsModelDataset
+        self.runSettings = runSettings
 
         self.currentModelName : str | None = None
 
     def empty(self) -> bool:
-        return len(self.pairsModelDataset) == 0
+        return len(self.runSettings) == 0
     
     def execute_run(self):
-        model, dataset = self.pairsModelDataset.pop()
-        return (model, dataset, self._executeRun(model, dataset))
+        # model, dataset = self.pairsModelDataset.pop()
+        # return (model, dataset, self._executeRun(model, dataset))
+        model, dataset, script_paths = self.runSettings.pop()
+        return (model, dataset, self._executeRun(model, dataset, script_paths))
 
-    def _executeRun(self, model: Model, dataset: Dataset) -> Tuple[List[MetricResult], List[MetricResult]]:
+    def _executeRun(self, model: Model, dataset: Dataset, script_paths: Dict[str, str]) -> Tuple[List[MetricResult], List[MetricResult]]:
         # Runs are ordered by models. Upload the next model:
         if model.name != self.currentModelName:
             self.currentModelName = model.name
@@ -55,7 +58,8 @@ class RunPipeline():
         accuracyEvaluator = accuracyEvaluatorFactory(model.task)(
             model=model,
             deviceInterface=self.deviceInterface,
-            dataset=dataset
+            dataset=dataset,
+            required_script_paths=script_paths
         )
         accuracyResults = accuracyEvaluator.evaluate()
         

@@ -1,5 +1,5 @@
 from configurationHandler.schemas import Device, Run, Model, Dataset
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from pydantic_core import Url
 from collections import defaultdict
 from pathlib import Path
@@ -66,7 +66,7 @@ class EvaluatorController():
         runsByDevice = defaultdict(list)
         for run in self.runs:
             runsByDevice[run.deviceName].append(run)
-        runsByDevice = dict(runsByDevice)
+        runsByDevice : Dict[str, List[Run]] = dict(runsByDevice)
 
         # Create pipeline for each device:
         for deviceName in runsByDevice.keys():
@@ -74,19 +74,20 @@ class EvaluatorController():
             interface = [x for x in self.deviceInteraces if x.device.name == deviceName][0]
 
             # Run for a device is defined by model and dataset:
-            pairsModelDataset : List[Tuple[Model, Dataset]] = []
+            runSettings : List[Tuple[Model, Dataset, Dict[str, str]]] = []
             # Create pairs of models and datasets:
             for run in runsByDevice[deviceName]:
                 model = [x for x in self.models if x.name == run.modelName][0]
                 dataset = [x for x in self.datasets if x.name == run.datasetName][0]
-                pairsModelDataset.append((model, dataset))
+                runSettings.append((model, dataset, run.required_script_paths))
             # Order pairs by model name:
-            pairsModelDataset = sorted(pairsModelDataset, key=lambda pair: pair[0].name)
+            runSettings = sorted(runSettings, key=lambda setting: setting[0].name)
             
             self.pipelines.append(
                 RunPipeline(
                     deviceInterface=interface,
-                    pairsModelDataset=pairsModelDataset
+                    # pairsModelDataset=pairsModelDataset
+                    runSettings=runSettings
                 )
             )
 

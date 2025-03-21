@@ -47,6 +47,7 @@ class Run(BaseModel):
     deviceName: str
     modelName: str
     datasetName: str
+    required_script_paths: Dict[str, str]
 
 
 class Config(BaseModel):

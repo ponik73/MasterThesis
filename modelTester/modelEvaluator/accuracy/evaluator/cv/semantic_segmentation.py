@@ -13,17 +13,17 @@ from .utils import resizeImages
 from user_script.scripts.align_target_predicted import AlignTargetPredictedScript, AlignTargetPredictedFunction
 
 class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
-    
-    def __init__(self, model, deviceInterface, dataset):
-        super().__init__(model, deviceInterface, dataset)
+    def __init__(self, model, deviceInterface, dataset, required_script_paths):
+        super().__init__(model, deviceInterface, dataset, required_script_paths)
 
         self.imageKey = dataset.dataset_keys.get("input", None)
         self.annotationKey = dataset.dataset_keys.get("target", None)
 
     def load_align_function(self):
+        required_script_name = "align_target_predicted"
         required_function_name = "align_target_predicted"
         
-        script_path = Path("/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/deeplab_segmentation.py") # TODO: specify config (run specific)
+        script_path = Path(self.required_script_paths.get(required_script_name, None))
         script = AlignTargetPredictedScript(script_path)
         script.load()
         

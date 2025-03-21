@@ -17,11 +17,13 @@ class AccuracyEvaluator(ABC):
         self,
         model: Model,
         deviceInterface: DeviceInterface,
-        dataset: Dataset
+        dataset: Dataset,
+        required_script_paths: Dict[str, str]
     ):
         self.model = model
         self.deviceInterface = deviceInterface
         self.dataset = dataset
+        self.required_script_paths = required_script_paths
 
         # Get model input size from the API:
         self.modelInputs = deviceInterface.getModelInputInfo(
