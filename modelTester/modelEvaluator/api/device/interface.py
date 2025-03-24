@@ -77,14 +77,15 @@ class DeviceInterface():
                 }
             }
             
-            fingerprint = getFingerprintCall(
+            sys_name, kernel_version = getFingerprintCall(
                 url=self.url,
                 **callArgs
             )
-            if not fingerprint:
+            if sys_name is None or kernel_version is None:
                 raise
             
-            self.device.fingerprint = fingerprint
+            self.device.sys_name = sys_name
+            self.device.kernel_version = kernel_version
         except Exception as e:
             print(f'Unable to retrieve fingerprint of device: `{self.name}` at `{self.url}`. Reason: {e}')
 

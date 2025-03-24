@@ -30,7 +30,8 @@ class ReportInterface():
                 },
                 "json": {
                     'device': {
-                        'fingerprint': device.fingerprint,
+                        'sys_name': device.sys_name,
+                        'kernel_version': device.kernel_version
                     },
                     'model': {
                         'framework': model.framework.value,

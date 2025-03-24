@@ -19,7 +19,8 @@ class SupportedModelFrameworks(StrEnum):
 class Device(BaseModel):
     name: str
     uri: str
-    fingerprint : str | None = None
+    sys_name : str | None = None
+    kernel_version : str | None = None
     distinctAttributes : List[str] = ["name"]
 
 

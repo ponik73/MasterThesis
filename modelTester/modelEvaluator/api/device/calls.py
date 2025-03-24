@@ -1,5 +1,6 @@
 from requests import Response
 from pydantic_core import Url
+from typing import Tuple
 
 from ..apiCall import apiCall
 
@@ -7,11 +8,13 @@ from ..apiCall import apiCall
     method="GET",
     endpoint=""
 )
-def getFingerprintCall(response: Response | None, url: Url, **kwargs) -> str:
+def getFingerprintCall(response: Response | None, url: Url, **kwargs) -> Tuple[str, str]:
     if not response:
         raise
     
-    return str(response.json()["fingerprint"]).strip()
+    sys_name = str(response.json()["sys_name"]).strip()
+    kernel_version = str(response.json()["kernel_version"]).strip()
+    return (sys_name, kernel_version)
 
 @apiCall(
     method="POST",

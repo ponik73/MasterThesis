@@ -43,12 +43,21 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
         response_model=FingerprintOutput
 )
 async def getFingerprint():
+    cmdResult = subprocess.run('uname -n', capture_output=True, text=True, shell = True)
+
+    if cmdResult.returncode != 0:
+        raise HTTPException(status_code=400, detail=f"Unable to indentify the device. Reason {cmdResult.stderr}")
+    
+    sys_name = cmdResult.stdout
+    
     cmdResult = subprocess.run('uname -r', capture_output=True, text=True, shell = True)
 
     if cmdResult.returncode != 0:
         raise HTTPException(status_code=400, detail=f"Unable to indentify the device. Reason {cmdResult.stderr}")
+    
+    kernel_version = cmdResult.stdout
 
-    return {"fingerprint": cmdResult.stdout}
+    return FingerprintOutput(sys_name=sys_name, kernel_version=kernel_version)
 
 
 if __name__ == "__main__":

@@ -18,4 +18,5 @@ class ErrorAPIResponse(GenericAPIResponse):
 class FingerprintOutput(BaseModel):
     """Schema for fingerprint request."""
 
-    fingerprint: str = Field(description="Linux device fingerprint")
+    sys_name: str = Field(description="Linux device name")
+    kernel_version: str = Field(description="Kernel version of the Linux device")
