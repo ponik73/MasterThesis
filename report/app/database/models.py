@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 from typing import List, Dict, Literal
 from datetime import datetime, timezone
 
@@ -8,13 +8,20 @@ from .enumerated import SupportModelFrameworks, SupportedModelTasks, SupportedPl
 
 # Base, Public, Create
 class DeviceBase(SQLModel):
-    fingerprint: str  = Field(index=True, unique=True)
+    sys_name: str = Field(index=True)
+    kernel_version: str = Field(index=True)
 
 # Table
 class Device(DeviceBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     tests: List["Run"] = Relationship(back_populates="device")
+
+    __table_args__ = (
+        UniqueConstraint("sys_name", "kernel_version", name="fingerprint"),
+        # If you want a composite index that's not unique
+        # Index("idx_sys_kernel", "sys_name", "kernel_version"),
+    )
 
 ############## MODEL & DATASET
 

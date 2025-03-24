@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Testing Report</title>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .controls {
+            background-color: #f5f7fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        .control-horizontal{
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .control-horizontal > label{
+            margin-bottom: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: 100%;
+            max-width: 300px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .metric-row {
+            background-color: #f9f9f9;
+        }
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        .chart {
+            width: 100%;
+            height: 100%;
+            background-color: #f5f7fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hidden {
+            display: none;
+        }
+        .key-findings {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .comparison-highlight-green {
+            font-weight: bold;
+            color: green;
+        }
+        .comparison-highlight-red {
+            font-weight: bold;
+            color: red;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Model latency comparison</h1>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="model-select">Model:</label>
+            <select name="model_id" id="model-select" onchange="updateQuery(this)">
+                {% if selected_model_id is none %}
+                <option value="" disabled selected>-</option>
+                <hr />
+                {% endif %}
+                <optgroup label="Kaggle">
+                    {% for m in models_by_platform.kaggle %}
+                    <option value="{{ m.id }}" {% if selected_model_id == m.id %}selected{% endif %}>
+                        {{ m.path }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
+                <hr />
+                <optgroup label="Hugging Face">
+                    {% for m in models_by_platform.hf %}
+                    <option value="{{ m.id }}" {% if selected_model_id == m.id %}selected{% endif %}>
+                        {{ m.path }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
+                <hr />
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="model-select">Dataset:</label>
+            <select name="dataset_id" id="dataset-select" onchange="updateQuery(this)">
+                {% if selected_dataset_id is none %}
+                <option value="" disabled selected>-</option>
+                <hr />
+                {% endif %}
+                <optgroup label="Kaggle">
+                    {% for d in datasets_by_platform.kaggle %}
+                    <option value="{{ d.id }}" {% if selected_dataset_id == d.id %}selected{% endif %}>
+                        {{ d.path }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
+                <hr />
+                <optgroup label="Hugging Face">
+                    {% for d in datasets_by_platform.hf %}
+                    <option value="{{ d.id }}" {% if selected_dataset_id == d.id %}selected{% endif %}>
+                        {{ d.path }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
+                <hr />
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="dataset-select">Device:</label>
+            <select name="device_name" id="dataset-select" onchange="updateQuery(this)">
+                {% if selected_device_name is none %}
+                <option value="" disabled selected>-</option>
+                <hr />
+                {% endif %}
+                {% for name in sys_names %}
+                <option value="{{ name }}" {% if selected_device_name == name %}selected{% endif %}>
+                    {{ name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- <div class="control-group">
+            <div class="control-horizontal">
+                <label for="dataset-select">Best run:</label>
+                <input type="checkbox" checked="true" onchange="updateQuery(this)">
+            </div>
+        </div> -->
+
+        <!-- <div class="control-group">
+            <label for="dataset-select">Date:</label>
+            <div>
+                <input type="date" disabled="true" onchange="updateQuery(this)">
+                <span>-</span>
+                <input type="date" disabled="true" onchange="updateQuery(this)">
+            </div>
+        </div> -->
+
+        
+
+    </div>
+
+    <div id="comparison-latency-results-table-container">
+        <table id="results-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>
+                        <select name="kernel_version_a" id="dataset-select" onchange="updateQuery(this)">
+                            {% if selected_kernel_a is none %}
+                            <option value="" disabled selected>Kernel version A</option>
+                            <hr />
+                            {% endif %}
+                            {% for name in kernel_versions %}
+                            <option value="{{ name }}" {% if selected_kernel_a == name %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </th>
+                    <th>
+                        <select name="kernel_version_b" id="dataset-select" onchange="updateQuery(this)">
+                            {% if selected_kernel_b is none %}
+                            <option value="" disabled selected>Kernel version B</option>
+                            <hr />
+                            {% endif %}
+                            {% for name in kernel_versions %}
+                            <option value="{{ name }}" {% if selected_kernel_b == name %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </th>
+                    <th>Difference (absolute)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metric, value_a, value_b, diff in table_rows %}
+                <tr>
+                    <td>{{metric}}</td>
+                    <td>{{value_a}}</td>
+                    <td>{{value_b}}</td>
+                    <td class="comparison-highlight-{% if diff < 0 %}green{% else %}red{% endif %}">{{diff}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+        
+    <script>
+        
+    function updateQuery(element) {
+        // Get the current URL and create a URL object to work with
+        const currentUrl = new URL(window.location.href);
+        
+        // Get the name and value from the changed input element
+        const paramName = element.name;
+        const paramValue = element.value;
+        console.log(paramName)
+        console.log(paramValue)
+        
+        // // Update or add the parameter to the URL
+        // if (paramValue === "" || paramValue === null) {
+        //     // Remove the parameter if the value is empty
+        //     currentUrl.searchParams.delete(paramName);
+        // } else {
+        //     // Set or update the parameter
+        //     currentUrl.searchParams.set(paramName, paramValue);
+        // }
+        currentUrl.searchParams.set(paramName, paramValue);
+        
+        // Navigate to the new URL, triggering a page reload
+        window.location.href = currentUrl.toString();
+        // window.location.replace(currentUrl.toString())
+    }
+    </script>
+</body>

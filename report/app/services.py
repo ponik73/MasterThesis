@@ -8,6 +8,7 @@ from itertools import groupby
 from database.models import Device, Model, ModelBase, Dataset, DatasetBase, Run, Metric, DeviceBase, MetricBase
 from database.services import get_or_create_record, insert_multiple_into_db, insert_single_into_db, get_multiple_by_ids
 from database.enumerated import MetricCategory
+from html.schemas.report import DeviceResults, RunResults
 
 def register_run_service(
     device: DeviceBase,
@@ -84,19 +85,6 @@ def generate_report_service(
     runs_by_device: Dict[int, List[Run]] = {
         device_id: list(group) for device_id, group in groupby(runs, key=lambda r: r.device_id)
     }
-
-    # TODO: call regression check
-
-    # Template objects: 
-    class RunResults(BaseModel):
-        model: Model
-        latency_results: List[Metric]
-        dataset: Dataset
-        accuracy_results: List[Metric]
-
-    class DeviceResults(BaseModel):
-        device: Device
-        results: List[RunResults]
 
     # Parse the runs into template objects:
     results : List[DeviceResults] = []

@@ -11,28 +11,31 @@ from jinja2 import Environment, FileSystemLoader
 
 from schemas import RegisterRunInput, RegisterRunOutput, GetReportInput
 from services import register_run_service, generate_report_service
+from compare.router import compare_router
+from database.services import get_session, create_db_and_tables
+from html.environment import jinja_env
 
 app = FastAPI(
     # summary="REST API for latency and accuracy assessment of neural network models on embedded platforms."
 )
-
+app.include_router(compare_router)
 ################## DATABASE
 
-engine = create_engine(
-    "sqlite:///database.db",
-    connect_args={
-        "check_same_thread": False
-    }
-)
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-def get_session():
-    with Session(engine) as session:
-        yield session
+# engine = create_engine(
+#     "sqlite:///database.db",
+#     connect_args={
+#         "check_same_thread": False
+#     }
+# )
+# def create_db_and_tables():
+#     SQLModel.metadata.create_all(engine)
+# def get_session():
+#     with Session(engine) as session:
+#         yield session
 
 ################## HTML
 
-jinja_env = Environment(loader=FileSystemLoader("html/templates"))
+# jinja_env = Environment(loader=FileSystemLoader("html/templates"))
 
 ################## LIFESPAN TODO       
 
@@ -59,7 +62,7 @@ def register_run(
     )
 
 @app.get("/report/", response_class=HTMLResponse)
-def generate_report(
+def get_report(
     experiment: Annotated[GetReportInput, Query(..., description="List of run IDs")],
     db: Annotated[Session, Depends(get_session)],
 ):
@@ -71,7 +74,6 @@ def generate_report(
             template=template
         )
     )
-
 ################## EXCEPTIONS
 
 @app.exception_handler(500)
