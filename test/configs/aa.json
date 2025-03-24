@@ -7,24 +7,31 @@
     ],
     "models": [
         {
-            "name": "mobilenetv2",
-            "task": "image-classification",
-            "platform": "hf",
-            "uri": "qualcomm/MobileNet-v2/blob/93143d3ceac0f575d3641f4333009c5b648bb1a0/MobileNet-v2.tflite"
+            "name": "deeplabv3",
+            "task": "semantic-segmentation",
+            "platform": "kaggle",
+            "uri": "tensorflow/deeplabv3/tfLite/default"
         }
     ],
     "datasets": [
         {
-            "name": "mini_imagenet_classification",
-            "platform": "kaggle",
-            "uri": "deeptrial/miniimagenet"
+            "name": "pascal_voc_2012_semantic_segmentation",
+            "platform": "hf",
+            "uri": "jakubkasem/pascal_voc_2012",
+            "dataset_keys": {
+                "input": "image",
+                "target": "annotation"
+            }
         }
     ],
     "runs": [
         {
             "deviceName": "localhost",
-            "modelName": "mobilenetv2",
-            "datasetName": "mini_imagenet_classification"
+            "modelName": "deeplabv3",
+            "datasetName": "pascal_voc_2012_semantic_segmentation",
+            "required_script_paths": {
+                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/deeplab_segmentation.py"
+            }
         }
     ]
 }
