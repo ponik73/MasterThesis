@@ -22,7 +22,7 @@ TASK_METRIC_MAPPING : Dict[SupportedTasks, List[type[Metric]]] = {
         semantic_segmentation.MeanIntersectionOverUnion,
         semantic_segmentation.DiceScoreMicro,
         semantic_segmentation.DiceScoreMacro,
-        semantic_segmentation.HausdorffDistanceEuclidean
+        # semantic_segmentation.HausdorffDistanceEuclidean
     ],
     SupportedTasks.OBJECT_DETECTION : [
         
