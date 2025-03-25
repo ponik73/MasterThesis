@@ -96,5 +96,5 @@ def get_latest_run(
     query = query.where(Run.model_id == model_id)
     if dataset_id is not None:
         query = query.where(Run.dataset_id == dataset_id)
-    query = query.order_by(Run.created_datetime)
+    query = query.order_by(Run.created_datetime.desc())
     return db.exec(query).first()

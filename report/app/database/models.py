@@ -86,7 +86,7 @@ class Dataset(DatasetBase, table=True):
 # Base, Public, Table
 class Run(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    created_datetime : datetime = Field(default=datetime.now(timezone.utc))
+    created_datetime : datetime = Field(default_factory=lambda: datetime.now())
     device_id: int = Field(foreign_key="device.id")
     model_id: int = Field(foreign_key="model.id")
     dataset_id: int = Field(foreign_key="dataset.id")
