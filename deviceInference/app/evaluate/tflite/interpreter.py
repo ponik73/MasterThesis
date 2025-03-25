@@ -45,7 +45,7 @@ class TfliteInterpreter():
         try:
             self.interpreter.allocate_tensors()
 
-            results : List[Dict[int, np.typing.NDArray[Any]]] = [] # Batch results
+            results : List[Dict[int, Any]] = [] # Batch results
             # Execute the inference of batch:
             for item in batch.items:
                 # Fed data to each input:
