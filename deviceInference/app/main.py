@@ -1,6 +1,6 @@
 import subprocess
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from starlette.responses import JSONResponse
 from starlette.requests import Request
 from fastapi.encoders import jsonable_encoder
@@ -14,14 +14,14 @@ app = FastAPI(
 )
 
 # DEBUG:
-from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# from fastapi.middleware.cors import CORSMiddleware
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 app.include_router(modelRouter)
 app.include_router(evaluateRouter)
@@ -39,6 +39,13 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
 
 @app.get(
         "/",
+        description="Sever alive endpoint",
+)
+def alive():
+    return Response(status_code=200)
+
+@app.get(
+        "/fingerprint",
         description="Run profiling with parameters defined by request body.",
         response_model=FingerprintOutput
 )
