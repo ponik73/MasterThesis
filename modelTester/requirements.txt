@@ -3,6 +3,7 @@ datasets
 kagglehub
 pillow
 torch
+torchmetrics
 
 asyncssh
 python-certifi-win32
