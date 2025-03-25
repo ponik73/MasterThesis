@@ -38,20 +38,20 @@ class RunPipeline():
                 raise Exception("TODO")
 
         # # Evaluate latency on device:
-        # latencyRawOutput = self.deviceInterface.evaluateLatency(model.name, model.framework)
-        # # Parse the output:
-        # if not latencyRawOutput:
-        #     raise Exception(f'[{self.deviceInterface.name}] Error during latency evaluation.')
+        latencyRawOutput = self.deviceInterface.evaluateLatency(model.name, model.framework)
+        # Parse the output:
+        if not latencyRawOutput:
+            raise Exception(f'[{self.deviceInterface.name}] Error during latency evaluation.')
         
-        # parser = latencyParserFactory(model.framework)
-        # latencyResults = parser.parse(latencyRawOutput)
+        parser = latencyParserFactory(model.framework)
+        latencyResults = parser.parse(latencyRawOutput)
         ########################################################
         #  dummy:
-        from modelEvaluator.accuracy.metrics.metric import MetricResult
-        latencyResults = [
-                MetricResult(name="latency_metric_1", value=1.0),
-                MetricResult(name="latency_metric_2", value=2.0)
-        ]
+        # from modelEvaluator.accuracy.metrics.metric import MetricResult
+        # latencyResults = [
+        #         MetricResult(name="latency_metric_1", value=1.0),
+        #         MetricResult(name="latency_metric_2", value=2.0)
+        # ]
         ########################################################
     
         # Evaluate accuracy on device:

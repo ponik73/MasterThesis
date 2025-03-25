@@ -6,7 +6,14 @@ from ..apiCall import apiCall
 
 @apiCall(
     method="GET",
-    endpoint=""
+    endpoint="/"
+)
+def isServerUpCall(response: Response | None, url: Url, **kwargs) -> bool:
+    return response is not None
+
+@apiCall(
+    method="GET",
+    endpoint="/fingerprint"
 )
 def getFingerprintCall(response: Response | None, url: Url, **kwargs) -> Tuple[str, str]:
     if not response:
