@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
-# import tflite_runtime.interpreter as tflite
-from tensorflow import lite as tflite
+import tflite_runtime.interpreter as tflite
+# from tensorflow import lite as tflite
 from fastapi import HTTPException
 from typing import List, Any, Dict
 from ..schemas import Batch
