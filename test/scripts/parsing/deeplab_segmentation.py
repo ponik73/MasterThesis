@@ -9,6 +9,6 @@ def align_target_predicted(predictions, targets):
     # predictions = np.argmax(predictions, axis=-1)
     predictions = [np.argmax(x, axis=-1) for x in predictions]
     targets[targets==255] = 0
-    predictions = np.array(predictions).astype('int')
-    targets = targets.astype('int')
+    predictions = np.array(predictions).astype('int64')
+    targets = targets.astype('int64')
     return (predictions, targets, num_classes, "index")
