@@ -16,9 +16,14 @@ class SupportedTasks(StrEnum):
 class SupportedModelFrameworks(StrEnum):
     TFLITE = "tflite"
 
+class _DeviceCredentials(BaseModel):
+    user_name: str = ""
+    password: str = ""
+
 class Device(BaseModel):
     name: str
     uri: str
+    credentials: _DeviceCredentials
     sys_name : str | None = None
     kernel_version : str | None = None
     distinctAttributes : List[str] = ["name"]

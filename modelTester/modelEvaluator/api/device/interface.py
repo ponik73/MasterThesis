@@ -10,6 +10,7 @@ import time
 from configuration import getSettings, DockerHubPath
 from configurationHandler.schemas import Device
 from modelEvaluator.api.device.calls import getFingerprintCall, uploadModelCall, getModelInputInfoTfliteCall, evaluateLatencyTfliteCall, predictTfliteCall, isServerUpCall
+from modelEvaluator.exceptions import DeviceApiInitError
 
 class DeviceInterface():
     def __init__(self, device: Device):
@@ -23,11 +24,8 @@ class DeviceInterface():
                 port=8000
             )
         
-        try:
-            # TODO: connect to the device: download, build, run docker fastapi
-            asyncio.get_event_loop().run_until_complete(self._initializeApi())
-        except Exception as e:
-            raise Exception("TODO Message (maybe exceptions.py)")
+        asyncio.get_event_loop().run_until_complete(self._initializeApi())
+
         
     async def _createSshConnection(self) -> asyncssh.SSHClientConnection:
             """Create SSH connection with remote device.
@@ -37,8 +35,8 @@ class DeviceInterface():
             # try:
             return await asyncssh.connect(
                 self.device.uri,
-                username="root",#self.username, # TODO: user specifies username and password
-                password="", #self.password,
+                username=self.device.credentials.user_name,
+                password=self.device.credentials.password,
                 connect_timeout=30,
                 known_hosts=None
             )
@@ -57,7 +55,7 @@ class DeviceInterface():
         )
 
         if not result.stdout:
-            raise Exception("TODO")
+            raise DeviceApiInitError("Could not list remote device free ports.")
 
         result_std_output = result.stdout.decode() if type(result.stdout) is bytes else cast(str, result.stdout)
         # strip newline char from each record
@@ -74,7 +72,7 @@ class DeviceInterface():
 
         result = await conn.run(f'docker container ls --filter=ancestor={image} --format "{{{{.ID}}}}\n{{{{.Ports}}}}"')
         if result.exit_status != 0:
-            raise Exception("Unable to check if the device API container is running.")
+            raise DeviceApiInitError("Unable to check if the device API container is running.")
         lines = result.stdout.splitlines()
         if len(lines) > 1:
             container_id = lines[0]
@@ -88,14 +86,14 @@ class DeviceInterface():
     async def _pull_and_run_docker(self, conn: asyncssh.SSHClientConnection, image: DockerHubPath) -> int:
         result = await conn.run(f'docker pull {image}')
         if result.exit_status != 0:
-            raise Exception("Unable to pull the device API image.")
+            raise DeviceApiInitError("Unable to pull the device API image.")
         
         port = await self._get_free_port(conn)
 
         # Run the API in container:
         result = await conn.run(f'docker run -e SYS_NAME=`uname -n` -d -p {port}:{port} {image}')
         if result.exit_status != 0:
-            raise Exception("Unable to pull the device API image.")
+            raise DeviceApiInitError("Unable to start the device API container.")
 
         return port
 
@@ -127,7 +125,7 @@ class DeviceInterface():
                 server_up = isServerUpCall(url=self.url)
 
             if not server_up:
-                raise Exception("TODO")
+                raise DeviceApiInitError("Device API container is not running.")
         
     def getFingerprint(self):
         try:

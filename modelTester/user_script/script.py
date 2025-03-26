@@ -5,6 +5,8 @@ from types import ModuleType
 from importlib.util import spec_from_file_location, module_from_spec
 import inspect
 
+from user_script.exceptions import ScriptLoadingError, RequiredFunctionNotPresentError, RequiredFunctionInvalidParameters
+
 class RequiredFunction(ABC):
     def __init__(self):
         self.loaded_callable : Callable | None = None
@@ -42,7 +44,7 @@ class UserScript(ABC):
         self.module = module_from_spec(spec)
         spec.loader.exec_module(self.module)
         if self.module is None:
-            raise Exception("TODO")
+            raise ScriptLoadingError(script_path=self.script_path)
         
         self._validate()
     
@@ -50,18 +52,18 @@ class UserScript(ABC):
         for f in self.required_functions:
             # Module contains object with the required name:
             if not hasattr(self.module, f.name()):
-                raise Exception("TODO")
+                raise RequiredFunctionNotPresentError(script_path=self.script_path, function_name=f.name())
             module_f = getattr(self.module, f.name())
             
             # The object is callable:
             if not callable(module_f):
-                raise Exception("TODO")
+                raise RequiredFunctionNotPresentError(script_path=self.script_path, function_name=f.name())
             module_f_signature = inspect.signature(module_f)
             
             # The callable parameters match the required parameters:
             module_f_param_names = list(module_f_signature.parameters.keys())
             if len(module_f_param_names) != len(f.param_names()) or set(module_f_param_names) != set(f.param_names()):
-                raise Exception("TODO")
+                raise RequiredFunctionInvalidParameters(script_path=self.script_path, function_name=f.name())
             
             f.loaded_callable = module_f
     

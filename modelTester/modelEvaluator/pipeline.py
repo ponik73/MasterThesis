@@ -5,6 +5,7 @@ from modelEvaluator.accuracy.evaluator.accuracyEvaluatorFactory import accuracyE
 from modelEvaluator.accuracy.metrics.metric import MetricResult
 from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.latency.parserFactory import latencyParserFactory
+from modelEvaluator.exceptions import ModelUploadError
 from configurationHandler.schemas import Model, Dataset, Run
 
 class RunPipeline():
@@ -31,7 +32,7 @@ class RunPipeline():
             self.currentModelName = model.name
             uploaded = self.deviceInterface.uploadModel(model.localPath, model.name)
             if not uploaded:
-                raise Exception("TODO")
+                raise ModelUploadError(model_local_path=model.localPath, api_url=self.deviceInterface.device.uri)
 
         # Evaluate latency on device:
         latencyRawOutput = self.deviceInterface.evaluateLatency(model.name, model.framework)
