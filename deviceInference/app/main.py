@@ -8,6 +8,7 @@ from schemas import FingerprintOutput
 
 from model.router import modelRouter
 from evaluate.router import evaluateRouter
+from exceptions import FingerprintError
 
 app = FastAPI(
     summary="REST API for latency and accuracy assessment of neural network models on embedded platforms."
@@ -53,14 +54,14 @@ async def getFingerprint():
     cmdResult = subprocess.run('echo $SYS_NAME', capture_output=True, text=True, shell = True)
 
     if cmdResult.returncode != 0:
-        raise HTTPException(status_code=400, detail=f"Unable to indentify the device. Reason {cmdResult.stderr}")
+        raise FingerprintError(f"Unable to indentify the device. Reason {cmdResult.stderr}")
     
     sys_name = cmdResult.stdout
     
     cmdResult = subprocess.run('uname -r', capture_output=True, text=True, shell = True)
 
     if cmdResult.returncode != 0:
-        raise HTTPException(status_code=400, detail=f"Unable to indentify the device. Reason {cmdResult.stderr}")
+        raise FingerprintError(f"Unable to indentify the device. Reason {cmdResult.stderr}")
     
     kernel_version = cmdResult.stdout
 

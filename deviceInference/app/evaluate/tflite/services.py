@@ -6,7 +6,7 @@ import numpy as np
 from .interpreter import tfliteInterpreter
 from .config import getExecutablePath, getExecutableUrl
 from ..schemas import Batch
-from exceptions import TFLiteLatencyError
+from exceptions import TFLiteLatencyError, TFLiteLatencyExecutableDownloadError, ArchitectureDeterminationError, ArchitectureNotSupportedError
 
 def latencyAssessmentTFlite(
         modelPath: Path,
@@ -21,11 +21,11 @@ def latencyAssessmentTFlite(
         # Source of the executable:
         url = getExecutableUrl(architecture)
         if not url:
-            raise HTTPException(status_code=500, detail=f"Architecture `{architecture}` not supported.")
+            raise ArchitectureNotSupportedError(architecture)
         # Download:
         _fetchLatencyExecutable(url, executablePath)
         if not executablePath.exists():
-            raise HTTPException(status_code=500, detail=f"Unable to download executable.")
+            raise TFLiteLatencyExecutableDownloadError(url=url)
 
     # Run the assessment:
     assessmentProcess = subprocess.run(f'{executablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
@@ -50,7 +50,7 @@ def getInputInfo(modelPath: Path):
 def _determineArchitecture() -> str:
     cmdResult = subprocess.run('uname -m', capture_output=True, text=True, shell = True)
     if cmdResult.returncode != 0 or cmdResult.stderr:
-        raise HTTPException(status_code=500, detail=f"Could not determine device architecture.")
+        raise ArchitectureDeterminationError
     return cmdResult.stdout.strip()
 
 def _fetchLatencyExecutable(url: str, executablePath: Path):
@@ -59,4 +59,4 @@ def _fetchLatencyExecutable(url: str, executablePath: Path):
         urllib.request.urlretrieve(url, executablePath)
         executablePath.chmod(0o755)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unable to download executable. Reason: '{type(e).__name__}'.") from e
+        raise TFLiteLatencyExecutableDownloadError(url=url)

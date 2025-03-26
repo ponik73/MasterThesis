@@ -45,7 +45,7 @@ async def evaluateAccuracyTFLite(
     # Check if model is present for inference:
     modelPath = settings.MODEL_DIR / f'{modelCustomName}.tflite'
     if not modelPath or not modelPath.exists() or not modelPath.is_file():
-        raise HTTPException(status_code=500, detail=f"Model not found.")
+        raise ModelNotFoundError(name=modelCustomName, framework='tflite')
 
     return Response(
         content=accuracyAssessment(".tflite", modelPath, batch),

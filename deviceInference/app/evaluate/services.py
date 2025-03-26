@@ -6,6 +6,7 @@ from typing import Literal
 from fastapi import HTTPException, UploadFile
 from .tflite.services import latencyAssessmentTFlite, accuracyAssessmentTFlite
 from .schemas import Batch
+from exceptions import FrameworkNotSupportedError, EncodingDecodingError
 
 def latencyAssessment(
         frameworkNN: Literal[".tflite"],
@@ -17,7 +18,7 @@ def latencyAssessment(
     }
 
     if frameworkNN not in latencyAssessmentFunctions.keys():
-        raise HTTPException(status_code=500, detail=f"Framework `{frameworkNN}` not supported.")
+        raise FrameworkNotSupportedError(framework=frameworkNN)
     
     return latencyAssessmentFunctions[frameworkNN](modelPath, tempDirPath)
 
@@ -34,7 +35,7 @@ def accuracyAssessment(
     decodedBatch = decodeBatch(encodedBatch)
 
     if frameworkNN not in assessmentFunctions.keys():
-        raise HTTPException(status_code=500, detail=f"Framework `{frameworkNN}` not supported.")
+        raise FrameworkNotSupportedError(framework=frameworkNN)
     
     # Execute inference:
     inferenceResult = assessmentFunctions[frameworkNN](modelPath, decodedBatch)
@@ -44,8 +45,8 @@ def accuracyAssessment(
 def decodeBatch(encodedBatch: bytes) -> Batch:
     try:
         return Batch(items=pickle.loads(codecs.decode(encodedBatch, "base64")))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during decoding batch data. Reason: '{e}'.") from e
+    except Exception:
+        raise EncodingDecodingError
 
 def encodeModelOutputs(modelOutputs) -> bytes:
     return codecs.encode(pickle.dumps(modelOutputs, protocol=pickle.HIGHEST_PROTOCOL), "base64")

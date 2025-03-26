@@ -28,17 +28,17 @@ class TfliteInterpreter():
             self.detailsOutput = self.interpreter.get_output_details()
             self.modelPath = modelPath
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Unable to initiate TFLite interpreter. Reason: '{type(e).__name__}'.") from e
+            raise TFLiteInferenceError(f"Unable to initiate TFLite interpreter.")
     
     def getInputDetails(self):        
         if not self.detailsInput:
-            raise HTTPException(status_code=500, detail=f"Unable to execyte TFLite inference.")
+            raise TFLiteInferenceError(f"TFLite interpreter has not returned input details.")
         
         return self.detailsInput
     
     def getOutputIndexes(self) -> List[int]:
         if not self.detailsOutput:
-            raise HTTPException(status_code=500, detail=f"Unable to execyte TFLite inference.")
+            raise TFLiteInferenceError(f"TFLite interpreter has not returned output details.")
         
         return [x['index'] for x in self.detailsOutput]
     
