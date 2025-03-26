@@ -15,29 +15,8 @@ from compare.router import compare_router
 from database.services import get_session, create_db_and_tables
 from html.environment import jinja_env
 
-app = FastAPI(
-    # summary="REST API for latency and accuracy assessment of neural network models on embedded platforms."
-)
+app = FastAPI()
 app.include_router(compare_router)
-################## DATABASE
-
-# engine = create_engine(
-#     "sqlite:///database.db",
-#     connect_args={
-#         "check_same_thread": False
-#     }
-# )
-# def create_db_and_tables():
-#     SQLModel.metadata.create_all(engine)
-# def get_session():
-#     with Session(engine) as session:
-#         yield session
-
-################## HTML
-
-# jinja_env = Environment(loader=FileSystemLoader("html/templates"))
-
-################## LIFESPAN TODO       
 
 @app.on_event("startup")
 def on_startup():
