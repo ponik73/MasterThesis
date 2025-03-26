@@ -18,22 +18,8 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
 
         self.imageKey = dataset.dataset_keys.get("input", None)
         self.annotationKey = dataset.dataset_keys.get("target", None)
-
-    def load_align_function(self):
-        required_script_name = "align_target_predicted"
-        required_function_name = "align_target_predicted"
-        
-        script_path = Path(self.required_script_paths.get(required_script_name, None))
-        script = AlignTargetPredictedScript(script_path)
-        script.load()
-        
-        align_function : AlignTargetPredictedFunction | None = script.get_function_by_name(required_function_name)
-        if align_function is None:
-            raise Exception("TODO")
-        return align_function
     
     def evaluate(self):
-        align_function = self.load_align_function()
         
         # Resize images
         inputShape : List[int] = self.modelInputs[0]["shape"]
@@ -55,7 +41,7 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
                 images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(inputDtype)
                 # images = np.array([x[self.imageKey] for x in batch]).astype(inputDtype)
             else:
-                raise ValueError("TODO")
+                raise TypeError("Model input data type is not supported.")
             
             
             annotations = np.array([x[self.annotationKey] for x in batch])
@@ -84,7 +70,7 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
             # Decode inference result and append it to the predictions:
             modelOutputs : List[Dict[int, np.typing.NDArray[Any]]] = np.array(decodeData(encodedOutputs))
 
-            predictions, targets, num_classes, input_format = align_function.call(predictions=modelOutputs, targets=annotations)
+            predictions, targets, num_classes, input_format = self.align_function.call(predictions=modelOutputs, targets=annotations)
             if len(self.metrics) == 0:
                 self.initMetrics(
                     **{

@@ -30,7 +30,4 @@ TASK_METRIC_MAPPING : Dict[SupportedTasks, List[type[Metric]]] = {
 }
 
 def getMetricsForTask(task: SupportedTasks) -> List[Type[Metric]]:
-    metrics = TASK_METRIC_MAPPING.get(task)
-    if not metrics or len(metrics) < 1:
-        raise ValueError("TODO")
-    return metrics
+    return TASK_METRIC_MAPPING.get(task)

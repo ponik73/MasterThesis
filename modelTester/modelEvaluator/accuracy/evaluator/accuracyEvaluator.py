@@ -3,11 +3,14 @@ from numpy.typing import NDArray
 from typing import Any, List, Dict, Type
 from pydantic import BaseModel
 from torch.types import Tensor
+from pathlib import Path
 
 from configurationHandler.schemas import Dataset, Model
 from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.accuracy.metrics.metric import Metric, MetricResult
 from modelEvaluator.accuracy.metrics.taskMetrics import getMetricsForTask
+from user_script.scripts.align_target_predicted import AlignTargetPredictedScript, AlignTargetPredictedFunction
+from user_script.exceptions import FunctionLoadingError
 
 class AccuracyEvaluator(ABC):
     """Abstract base class for accuracy evaluators."""
@@ -32,6 +35,21 @@ class AccuracyEvaluator(ABC):
         )
 
         self.metrics : List[Metric] = []
+
+        self.align_function = self._load_align_function()
+
+    def _load_align_function(self) -> AlignTargetPredictedFunction:
+        required_script_key = "align_target_predicted"
+        required_function_name = "align_target_predicted"
+        
+        script_path = Path(self.required_script_paths.get(required_script_key, None))
+        script = AlignTargetPredictedScript(script_path)
+        script.load()
+        
+        align_function : AlignTargetPredictedFunction | None = script.get_function_by_name(required_function_name)
+        if align_function is None:
+            raise FunctionLoadingError(required_function_name)
+        return align_function
 
     def _metrics(self) -> List[Type[Metric]]:
         return getMetricsForTask(self.model.task)

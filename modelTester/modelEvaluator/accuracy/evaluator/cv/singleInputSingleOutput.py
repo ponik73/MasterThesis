@@ -20,22 +20,7 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
         self.imageKey = dataset.dataset_keys.get("input", None)
         self.labelKey = dataset.dataset_keys.get("target", None)
 
-    def load_align_function(self):
-        required_script_name = "align_target_predicted"
-        required_function_name = "align_target_predicted"
-        
-        script_path = Path(self.required_script_paths.get(required_script_name, None))
-        script = AlignTargetPredictedScript(script_path)
-        script.load()
-        
-        align_function : AlignTargetPredictedFunction | None = script.get_function_by_name(required_function_name)
-        if align_function is None:
-            raise Exception("TODO")
-        return align_function
-
-
     def evaluate(self):
-        align_function = self.load_align_function()
 
         # Resize images
         inputShape : List[int] = self.modelInputs[0]["shape"]
@@ -58,7 +43,7 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
                 images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(inputDtype)
                 images = np.array([x[self.imageKey] for x in batch]).astype(inputDtype)
             else:
-                raise ValueError("TODO")
+                raise TypeError("Model input data type is not supported.")
             
             labels = np.array([x[self.labelKey] for x in batch])
             return {
@@ -87,7 +72,7 @@ class SingleInputSingleOutputAccuracyEvaluator(AccuracyEvaluator):
             # Decode inference result and append it to the predictions:
             modelOutputs : List[Dict[int, np.typing.NDArray[Any]]] = np.array(decodeData(encodedOutputs))
             
-            predictions, targets, num_classes = align_function.call(predictions=modelOutputs, targets=labels)
+            predictions, targets, num_classes = self.align_function.call(predictions=modelOutputs, targets=labels)
             if len(self.metrics) == 0:
                 self.initMetrics(**{"num_classes": num_classes})
             
