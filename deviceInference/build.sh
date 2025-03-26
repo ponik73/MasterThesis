@@ -1,7 +1,5 @@
 #!/bin/bash
 
-docker buildx create --use
+docker build --no-cache -t ponik73/device-api .
 
-# docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t ponik73/device-api:latest --push .
-
-docker buildx build --platform linux/arm64,linux/amd64 -t ponik73/device-api:latest --push .
+docker push ponik73/device-api
