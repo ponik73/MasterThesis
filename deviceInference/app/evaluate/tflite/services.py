@@ -6,6 +6,7 @@ import numpy as np
 from .interpreter import tfliteInterpreter
 from .config import getExecutablePath, getExecutableUrl
 from ..schemas import Batch
+from exceptions import TFLiteLatencyError
 
 def latencyAssessmentTFlite(
         modelPath: Path,
@@ -27,13 +28,9 @@ def latencyAssessmentTFlite(
             raise HTTPException(status_code=500, detail=f"Unable to download executable.")
 
     # Run the assessment:
-    try:
-        assessmentProcess = subprocess.run(f'{executablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
-        if assessmentProcess.returncode != 0 or not assessmentProcess.stdout:
-            raise Exception(str(assessmentProcess.returncode) + assessmentProcess.stderr + "\n" + assessmentProcess.stdout)
-            # raise Exception("TODO exceptions.py file (or maybe here) - LatencyAssessmentError")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during latency assessment Reason: '{e}'.") from e
+    assessmentProcess = subprocess.run(f'{executablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
+    if assessmentProcess.returncode != 0 or not assessmentProcess.stdout:
+        raise TFLiteLatencyError(return_code=assessmentProcess.returncode, stderr=assessmentProcess.stderr)
 
     return assessmentProcess.stdout
 
@@ -50,7 +47,6 @@ def getInputInfo(modelPath: Path):
     tfliteInterpreter.start(modelPath)
     return tfliteInterpreter.getInputDetails()
 
-# TODO: maybe move somewhere more general
 def _determineArchitecture() -> str:
     cmdResult = subprocess.run('uname -m', capture_output=True, text=True, shell = True)
     if cmdResult.returncode != 0 or cmdResult.stderr:

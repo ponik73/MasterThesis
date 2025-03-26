@@ -5,6 +5,7 @@ import tflite_runtime.interpreter as tflite
 from fastapi import HTTPException
 from typing import List, Any, Dict
 from ..schemas import Batch
+from exceptions import TFLiteInferenceError
 
 class TfliteInterpreter():
     def __init__(self):
@@ -62,7 +63,7 @@ class TfliteInterpreter():
                 results.append(res)
 
         except Exception as e:
-            raise Exception("TODO exceptions.py file (or maybe here) - TFLiteInferenceError" + e)
+            raise TFLiteInferenceError(str(e))
 
         return results
     

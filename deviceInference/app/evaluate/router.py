@@ -5,6 +5,7 @@ from fastapi.responses import Response
 from .schemas import LatencyOutput
 from .services import latencyAssessment, accuracyAssessment
 from config import Settings, getSettings
+from exceptions import ModelNotFoundError
 
 evaluateRouter = APIRouter(
     prefix="/evaluate",
@@ -22,7 +23,7 @@ async def evaluateLatencyTFLite(
 ):
     modelPath = settings.MODEL_DIR / f'{modelCustomName}.tflite'
     if not modelPath or not modelPath.exists() or not modelPath.is_file():
-        raise Exception("TODO exceptions.py file (or maybe here) - ModelNotFoundError")
+        raise ModelNotFoundError(name=modelCustomName, framework='tflite')
     
     serviceFuncArgs = {
         "frameworkNN": ".tflite",
