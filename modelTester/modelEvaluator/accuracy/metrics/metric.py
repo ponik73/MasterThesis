@@ -7,7 +7,7 @@ class MetricResult(BaseModel):
     # """Base model"""
     name: str
     value: float
-    # TODO: unit?
+    unit: str | None = None
 
 class Metric(ABC):
     """Abstract class for all evaluation metrics."""

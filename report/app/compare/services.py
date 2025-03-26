@@ -31,7 +31,7 @@ def generate_comparison(
     )
 
     kernel_versions: List[str] = []
-    table_rows: List[Tuple[str, str, str, float]] = []
+    table_rows: List[Tuple[Tuple[str, str], str, str, float]] = []
 
     # Model ID filtering
     if model_id is not None:
@@ -179,22 +179,22 @@ def _get_table_rows(
         else MetricCategory.LATENCY
     )
 
-    metrics_a: Dict[str, float] = {
-        metric.name: metric.value 
+    metrics_a: Dict[str, Tuple[float, str]] = {
+        metric.name: (metric.unit, metric.value) 
         for metric in run_a.metrics 
         if metric.category == metric_category
     }
-    metrics_b: Dict[str, float] = {
-        metric.name: metric.value 
+    metrics_b: Dict[str, Tuple[float, str]] = {
+        metric.name: (metric.unit, metric.value) 
         for metric in run_b.metrics 
         if metric.category == metric_category
     }
 
     # Get all unique metric names from both runs
-    table_rows: List[Tuple[str, str, str, float]] = []
+    table_rows: List[Tuple[Tuple[str, str], str, str, float]] = []
 
-    for metric_name, value_a in metrics_a.items():
-        value_b = metrics_b.get(metric_name, None)
+    for metric_name, (unit, value_a) in metrics_a.items():
+        _, value_b = metrics_b.get(metric_name, None)
         if value_b is None:
             continue
         # TODO: prettify
@@ -202,7 +202,7 @@ def _get_table_rows(
         value_a = str(value_a)
         value_b = str(value_b)
         table_rows.append(
-            (metric_name, value_a, value_b, abs_diff)
+            ((metric_name, unit), value_a, value_b, abs_diff)
         )
 
     return table_rows

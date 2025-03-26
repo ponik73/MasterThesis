@@ -12,10 +12,8 @@ class RunPipeline():
             self,
             deviceInterface: DeviceInterface,
             runSettings: List[Tuple[Model, Dataset, Dict[str, str]]]
-            # pairsModelDataset: List[Tuple[Model, Dataset]]
     ):
         self.deviceInterface = deviceInterface
-        # self.pairsModelDataset = pairsModelDataset
         self.runSettings = runSettings
 
         self.currentModelName : str | None = None
@@ -24,8 +22,6 @@ class RunPipeline():
         return len(self.runSettings) == 0
     
     def execute_run(self):
-        # model, dataset = self.pairsModelDataset.pop()
-        # return (model, dataset, self._executeRun(model, dataset))
         model, dataset, script_paths = self.runSettings.pop()
         return (model, dataset, self._executeRun(model, dataset, script_paths))
 
@@ -37,22 +33,13 @@ class RunPipeline():
             if not uploaded:
                 raise Exception("TODO")
 
-        # # Evaluate latency on device:
+        # Evaluate latency on device:
         latencyRawOutput = self.deviceInterface.evaluateLatency(model.name, model.framework)
         # Parse the output:
         if not latencyRawOutput:
             raise Exception(f'[{self.deviceInterface.name}] Error during latency evaluation.')
-        
         parser = latencyParserFactory(model.framework)
         latencyResults = parser.parse(latencyRawOutput)
-        ########################################################
-        #  dummy:
-        # from modelEvaluator.accuracy.metrics.metric import MetricResult
-        # latencyResults = [
-        #         MetricResult(name="latency_metric_1", value=1.0),
-        #         MetricResult(name="latency_metric_2", value=2.0)
-        # ]
-        ########################################################
     
         # Evaluate accuracy on device:
         accuracyEvaluator = accuracyEvaluatorFactory(model.task)(

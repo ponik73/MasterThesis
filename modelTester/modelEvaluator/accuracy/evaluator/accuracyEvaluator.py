@@ -59,6 +59,6 @@ class AccuracyEvaluator(ABC):
         return results
     
     @abstractmethod
-    def evaluate(self):
+    def evaluate(self) -> List[MetricResult]:
         """Intialize metrics, execute inference and update metrics. Return computed metrics."""
         pass

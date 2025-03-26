@@ -86,7 +86,6 @@ class EvaluatorController():
             self.pipelines.append(
                 RunPipeline(
                     deviceInterface=interface,
-                    # pairsModelDataset=pairsModelDataset
                     runSettings=runSettings
                 )
             )

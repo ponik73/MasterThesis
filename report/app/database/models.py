@@ -102,6 +102,7 @@ class Run(SQLModel, table=True):
 class MetricBase(SQLModel):
     name : str = Field(index=True)
     value : float = Field(index=True)
+    unit : str | None = None
 
 # Table
 class Metric(MetricBase, table=True):

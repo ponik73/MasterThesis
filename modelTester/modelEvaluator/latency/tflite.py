@@ -16,7 +16,7 @@ class TFliteLatencyParser(LatencyParser):
             "warmup": r"Warmup \(avg\):\s*(?P<value>[\d\.]+)",
             "inference": r"Inference \(avg\):\s*(?P<value>[\d\.]+)"
         }
-        # UNIT = "ms"
+        UNIT = "us"
         metrics : List[MetricResult] = []
         
         for metric, pattern in metricRe.items():
@@ -30,7 +30,7 @@ class TFliteLatencyParser(LatencyParser):
                 MetricResult(
                     name=metric,
                     value=match.group("value").strip(),
-                    # unit=UNIT
+                    unit=UNIT
                 )                
             )
 
