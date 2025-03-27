@@ -1,34 +1,34 @@
-import uvicorn
-from starlette.responses import JSONResponse
-from starlette.requests import Request
+from html.environment import jinja_env
 from typing import Annotated
-from sqlmodel import Session, SQLModel, create_engine
+
+import uvicorn
+from compare.router import compare_router
+from database.services import create_db_and_tables, get_session
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from jinja2 import Environment, FileSystemLoader
-
-from schemas import RegisterRunInput, RegisterRunOutput, GetReportInput
-from services import register_run_service, generate_report_service
-from compare.router import compare_router
-from database.services import get_session, create_db_and_tables
-from html.environment import jinja_env
+from schemas import GetReportInput, RegisterRunInput, RegisterRunOutput
+from services import generate_report_service, register_run_service
+from sqlmodel import Session
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 app = FastAPI()
 app.include_router(compare_router)
 
+
 @app.on_event("startup")
-def on_startup():
+def on_startup() -> None:
+    """Initialize database on server startup."""
     create_db_and_tables()
+
 
 ################## ROUTER
 
+
 @app.post("/run/", response_model=RegisterRunOutput)
-def register_run(
-    run: RegisterRunInput,
-    db: Annotated[Session, Depends(get_session)]
-):
+def register_run(run: RegisterRunInput, db: Annotated[Session, Depends(get_session)]) -> RegisterRunOutput:
+    """Write a run into database."""
     return RegisterRunOutput(
         run_id=register_run_service(
             device=run.device,
@@ -36,24 +36,25 @@ def register_run(
             latency_metrics=run.latency_metrics,
             dataset=run.dataset,
             accuracy_metrics=run.accuracy_metrics,
-            db=db
+            db=db,
         )
     )
+
 
 @app.get("/report/", response_class=HTMLResponse)
 def get_report(
     experiment: Annotated[GetReportInput, Query(..., description="List of run IDs")],
     db: Annotated[Session, Depends(get_session)],
-):
+) -> HTMLResponse:
+    """Get a html report for given runs."""
     template = jinja_env.get_template("report.html")
     return HTMLResponse(
-        content=generate_report_service(
-            run_ids=list(set(experiment.run_ids)),
-            db=db,
-            template=template
-        )
+        content=generate_report_service(run_ids=list(set(experiment.run_ids)), db=db, template=template)
     )
+
+
 ################## EXCEPTIONS
+
 
 @app.exception_handler(500)
 async def internal_exception_handler(_: Request, __: Exception) -> JSONResponse:
@@ -66,6 +67,7 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
     """Exception handler for HTTPException (400, 404, etc.)."""
     return JSONResponse(status_code=exc.status_code, content=jsonable_encoder({"error_message": str(exc.detail)}))
 
+
 ################## MAIN
 
 if __name__ == "__main__":
@@ -76,4 +78,3 @@ if __name__ == "__main__":
 
     PORT = 8001
     uvicorn.run(app, host="127.0.0.1", port=PORT)
-    

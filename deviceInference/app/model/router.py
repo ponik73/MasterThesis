@@ -1,41 +1,42 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
 
-from config import Settings, getSettings
-from .services import saveModel, getModelInputInfoTflite
+from config import Settings, get_settings
+from fastapi import APIRouter, Depends, File, Form, UploadFile
+
 from .schemas import InputInfoTfliteOutput
+from .services import get_model_input_info_tflite, save_model
 
-modelRouter = APIRouter(
+model_router = APIRouter(
     prefix="/model",
     tags=["model"],
 )
 
-@modelRouter.post(
-        "/upload",
-        description="Upload model."
-)
-async def uploadModel(
-    customName: Annotated[str, Form()],
-    modelFile: Annotated[UploadFile, File(description="Uploaded model file.")],
-    settings: Annotated[Settings, Depends(getSettings)],
-):
-    """Upload model
 
-    Args:
-        customName (Annotated[str, Form): Name model will be saved as.
-        modelFile (Annotated[UploadFile, File, optional): Reference to uploaded model file.
+@model_router.post("/upload", description="Upload model.")
+async def upload_model(
+    custom_name: Annotated[str, Form()],
+    model_file: Annotated[UploadFile, File(description="Uploaded model file.")],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> None:
+    """Store given model on device.
+
+    :param custom_name: Name model will be saved as
+    :param settings: settings dependency injection
+    :param model_file: Reference to uploaded model file
     """
-    return saveModel(customName, modelFile, settings.MODEL_DIR)
+    return save_model(custom_name, model_file, settings.MODEL_DIR)
 
-@modelRouter.get(
-        "/input-info/tflite",
-        description="Get info about input of the TFLite model.",
-        response_model=InputInfoTfliteOutput
+
+@model_router.get(
+    "/input-info/tflite", description="Get info about input of the TFLite model.", response_model=InputInfoTfliteOutput
 )
-async def getInputInfoTflite(
-    modelCustomName: str,
-    settings: Annotated[Settings, Depends(getSettings)],
-):
-    return InputInfoTfliteOutput.from_list(
-        data_list=getModelInputInfoTflite(modelCustomName, settings.MODEL_DIR)
-    )
+async def get_input_info_tflite(
+    model_custom_name: str,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> InputInfoTfliteOutput:
+    """Get information about tflite model's input nodes.
+
+    :param model_custom_name: Model name
+    :param settings: settings dependency injection
+    """
+    return InputInfoTfliteOutput.from_list(data_list=get_model_input_info_tflite(model_custom_name, settings.MODEL_DIR))

@@ -1,6 +1,8 @@
-from pathlib import Path
 from functools import lru_cache
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     """API global configuration properties."""
@@ -9,7 +11,8 @@ class Settings(BaseSettings):
     EXECUTABLES_DIR: Path = Path("./executables")
     TEMP_DIR: Path = Path("./tmp")
 
+
 @lru_cache
-def getSettings() -> Settings:
+def get_settings() -> Settings:
     """Cache function for Setting class instance."""
     return Settings()

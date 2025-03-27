@@ -109,7 +109,7 @@
 </head>
 <body>
     <h1>Model latency comparison</h1>
-    
+
     <div class="controls">
         <div class="control-group">
             <label for="model-select">Model:</label>
@@ -194,7 +194,7 @@
             </div>
         </div> -->
 
-        
+
 
     </div>
 
@@ -244,20 +244,20 @@
             </tbody>
         </table>
     </div>
-    
-        
+
+
     <script>
-        
+
     function updateQuery(element) {
         // Get the current URL and create a URL object to work with
         const currentUrl = new URL(window.location.href);
-        
+
         // Get the name and value from the changed input element
         const paramName = element.name;
         const paramValue = element.value;
         console.log(paramName)
         console.log(paramValue)
-        
+
         // // Update or add the parameter to the URL
         // if (paramValue === "" || paramValue === null) {
         //     // Remove the parameter if the value is empty
@@ -267,7 +267,7 @@
         //     currentUrl.searchParams.set(paramName, paramValue);
         // }
         currentUrl.searchParams.set(paramName, paramValue);
-        
+
         // Navigate to the new URL, triggering a page reload
         window.location.href = currentUrl.toString();
         // window.location.replace(currentUrl.toString())

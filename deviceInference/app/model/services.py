@@ -1,39 +1,45 @@
 from pathlib import Path
-from fastapi import HTTPException, UploadFile
+from typing import Any
 
-from evaluate.tflite import services as tfliteServices
-from exceptions import ModelUploadError, ModelNotFoundError
+from evaluate.tflite import services as tflite_services
+from exceptions import ModelNotFoundError, ModelUploadError
+from fastapi import UploadFile
 
-def saveModel(
-        customName: str,
-        modelUploadFile: UploadFile,
-        modelDir: Path
-    ):
+
+def save_model(custom_name: str, model_upload_file: UploadFile, model_dir: Path) -> None:
     """Save model file.
 
-    :param customName: Name under which model will be saved.
-    :param modelUploadFile: Instance of uploaded model.
-    :param modelDir: Path to a model storage directory.
+    :param custom_name: Name under which model will be saved.
+    :param model_upload_file: Instance of uploaded model.
+    :param model_dir: Path to a model storage directory.
     """
-    
-    if modelUploadFile.filename is None:
-        raise ModelUploadError("Field 'filename' is not present in uploaded form-data.")
+    if model_upload_file.filename is None:
+        error_message = "Field 'filename' is not present in uploaded form-data."
+        raise ModelUploadError(error_message)
 
-    modelFramework = Path(modelUploadFile.filename).suffix
-    modelPath = modelDir / Path(f'{customName}{modelFramework}')
-    
-    modelDir.mkdir(exist_ok=True, parents=True)
+    model_framework = Path(model_upload_file.filename).suffix
+    model_path = model_dir / Path(f"{custom_name}{model_framework}")
+
+    model_dir.mkdir(exist_ok=True, parents=True)
 
     try:
-        with modelPath.open("wb+") as f:
-            f.write(modelUploadFile.file.read())
+        with model_path.open("wb+") as f:
+            f.write(model_upload_file.file.read())
     except OSError as e:
-        raise ModelUploadError(f"Unable to save model file.") from e
-    
-def getModelInputInfoTflite(modelName: str, modelDir: Path):
+        error_message = "Unable to save model file."
+        raise ModelUploadError(error_message) from e
+
+
+def get_model_input_info_tflite(model_name: str, model_dir: Path) -> list[dict[str, Any]]:
+    """Get input nodes info from given tflite model.
+
+    :param model_name: Name under which model is saved.
+    :param model_dir: Path to a model storage directory.
+    :return: List of dictionaries containing node details
+    """
     # Check if model exists:
-    modelPath = modelDir / f"{modelName}.tflite"
-    if not modelPath.exists():
-        raise ModelNotFoundError(name=modelName, framework="tflite")
-    
-    return tfliteServices.getInputInfo(modelPath)
+    model_path = model_dir / f"{model_name}.tflite"
+    if not model_path.exists():
+        raise ModelNotFoundError(name=model_name, framework="tflite")
+
+    return tflite_services.get_input_info(model_path)

@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field
+from database.models import DatasetBase, DeviceBase, MetricBase, ModelBase
+from pydantic import BaseModel
 
-from typing import List
-from database.models import DeviceBase, ModelBase, DatasetBase, MetricBase
 
 class GenericAPIResponse(BaseModel):
     """Generic model for the API response."""
@@ -18,16 +17,24 @@ class ErrorAPIResponse(GenericAPIResponse):
 
     error_message: str
 
+
 class RegisterRunInput(BaseModel):
+    """Class representing `/run` endpoint payload."""
+
     device: DeviceBase
     model: ModelBase
-    latency_metrics: List[MetricBase]
+    latency_metrics: list[MetricBase]
     dataset: DatasetBase
-    accuracy_metrics: List[MetricBase]
+    accuracy_metrics: list[MetricBase]
+
 
 class RegisterRunOutput(BaseModel):
+    """Class representing `/run` endpoint output."""
 
     run_id: int
 
+
 class GetReportInput(BaseModel):
-    run_ids: List[int]
+    """Class representing `/report` endpoint query."""
+
+    run_ids: list[int]

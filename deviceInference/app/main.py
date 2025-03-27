@@ -1,18 +1,16 @@
 import subprocess
+
 import uvicorn
-from fastapi import FastAPI, HTTPException, Response
-from starlette.responses import JSONResponse
-from starlette.requests import Request
-from fastapi.encoders import jsonable_encoder
-from schemas import FingerprintOutput
-
-from model.router import modelRouter
-from evaluate.router import evaluateRouter
+from evaluate.router import evaluate_router
 from exceptions import FingerprintError
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.encoders import jsonable_encoder
+from model.router import model_router
+from schemas import FingerprintOutput
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
-app = FastAPI(
-    summary="REST API for latency and accuracy assessment of neural network models on embedded platforms."
-)
+app = FastAPI(summary="REST API for latency and accuracy assessment of neural network models on embedded platforms.")
 
 # DEBUG:
 # from fastapi.middleware.cors import CORSMiddleware
@@ -24,8 +22,9 @@ app = FastAPI(
 #     allow_headers=["*"],
 # )
 
-app.include_router(modelRouter)
-app.include_router(evaluateRouter)
+app.include_router(model_router)
+app.include_router(evaluate_router)
+
 
 @app.exception_handler(500)
 async def internal_exception_handler(_: Request, __: Exception) -> JSONResponse:
@@ -38,32 +37,38 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
     """Exception handler for HTTPException (400, 404, etc.)."""
     return JSONResponse(status_code=exc.status_code, content=jsonable_encoder({"error_message": str(exc.detail)}))
 
+
 @app.get(
-        "/",
-        description="Sever alive endpoint",
+    "/",
+    description="Sever alive endpoint",
 )
-def alive():
+def alive() -> Response:
+    """Return 200 OK if server is up."""
     return Response(status_code=200)
 
+
 @app.get(
-        "/fingerprint",
-        description="Run profiling with parameters defined by request body.",
-        response_model=FingerprintOutput
+    "/fingerprint",
+    description="Run profiling with parameters defined by request body.",
+    response_model=FingerprintOutput,
 )
-async def getFingerprint():
-    cmdResult = subprocess.run('echo $SYS_NAME', capture_output=True, text=True, shell = True)
+def get_fingerprint() -> FingerprintOutput:
+    """Get device name and kernel version."""
+    cmd_result = subprocess.run("echo $SYS_NAME", capture_output=True, text=True, shell=True, check=False)
 
-    if cmdResult.returncode != 0:
-        raise FingerprintError(f"Unable to indentify the device. Reason {cmdResult.stderr}")
-    
-    sys_name = cmdResult.stdout
-    
-    cmdResult = subprocess.run('uname -r', capture_output=True, text=True, shell = True)
+    if cmd_result.returncode != 0:
+        error_message = f"Unable to indentify the device. Reason {cmd_result.stderr}"
+        raise FingerprintError(error_message)
 
-    if cmdResult.returncode != 0:
-        raise FingerprintError(f"Unable to indentify the device. Reason {cmdResult.stderr}")
-    
-    kernel_version = cmdResult.stdout
+    sys_name = cmd_result.stdout
+
+    cmd_result = subprocess.run("uname -r", capture_output=True, text=True, shell=True, check=False)
+
+    if cmd_result.returncode != 0:
+        error_message = f"Unable to indentify the device. Reason {cmd_result.stderr}"
+        raise FingerprintError(error_message)
+
+    kernel_version = cmd_result.stdout
 
     return FingerprintOutput(sys_name=sys_name, kernel_version=kernel_version)
 
@@ -76,4 +81,3 @@ if __name__ == "__main__":
 
     PORT = 8000
     uvicorn.run(app, host="127.0.0.1", port=PORT)
-    

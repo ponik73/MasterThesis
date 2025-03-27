@@ -1,21 +1,31 @@
-from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
-from typing import List, Dict, Literal
-from datetime import datetime, timezone
+from datetime import datetime
 
-from .enumerated import SupportModelFrameworks, SupportedModelTasks, SupportedPlatforms, MetricCategory, platform_url_mapping
+from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
+
+from .enumerated import (
+    MetricCategory,
+    SupportedModelTasks,
+    SupportedPlatforms,
+    SupportModelFrameworks,
+    platform_url_mapping,
+)
 
 ############## DEVICE
 
-# Base, Public, Create
+
 class DeviceBase(SQLModel):
+    """Base SQL class representing a device."""
+
     sys_name: str = Field(index=True)
     kernel_version: str = Field(index=True)
 
-# Table
+
 class Device(DeviceBase, table=True):
+    """Class representing device SQL table."""
+
     id: int | None = Field(default=None, primary_key=True)
 
-    tests: List["Run"] = Relationship(back_populates="device")
+    tests: list["Run"] = Relationship(back_populates="device")
 
     __table_args__ = (
         UniqueConstraint("sys_name", "kernel_version", name="fingerprint"),
@@ -23,24 +33,13 @@ class Device(DeviceBase, table=True):
         # Index("idx_sys_kernel", "sys_name", "kernel_version"),
     )
 
-############## MODEL & DATASET
-
-# Base, Public, Create
-# class ResourceBase(SQLModel):
-#     path: str = Field(index=True, unique=True)
-#     platform: SupportedPlatforms = Field(index=True)
-
-# # Table
-# class Resource(ResourceBase, table=True):
-#     id: int | None = Field(default=None, primary_key=True)
-
-#     models: List["Model"] = Relationship(back_populates="resource")
-#     datasets: List["Dataset"] = Relationship(back_populates="resource")
 
 ############## MODEL
 
-# Base, Public
+
 class ModelBase(SQLModel):
+    """Base SQL class representing a model."""
+
     framework: SupportModelFrameworks = Field(index=True)
     task: SupportedModelTasks = Field(index=True)
     path: str = Field(index=True, unique=True)
@@ -49,44 +48,48 @@ class ModelBase(SQLModel):
     @property
     def platform_url(self) -> str:
         """Returns the URL associated with the platform."""
-        
         return platform_url_mapping.get(self.platform, "")
 
-# Table
-class Model(ModelBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    # resource_id: int = Field(foreign_key="resource.id", index=True, unique=True)
 
-    # resource: Resource = Relationship(back_populates="models")
-    tests: List["Run"] = Relationship(back_populates="model")    
+class Model(ModelBase, table=True):
+    """Class representing model SQL table."""
+
+    id: int | None = Field(default=None, primary_key=True)
+
+    tests: list["Run"] = Relationship(back_populates="model")
 
 
 ############## DATASET
 
+
 class DatasetBase(SQLModel):
+    """Base SQL class representing a dataset."""
+
     path: str = Field(index=True, unique=True)
     platform: SupportedPlatforms = Field(index=True)
 
     @property
     def platform_url(self) -> str:
         """Returns the URL associated with the platform."""
-        
         return platform_url_mapping.get(self.platform, "")
 
-# Base, Public, Table
-class Dataset(DatasetBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    # resource_id: int = Field(foreign_key="resource.id", index=True, unique=True)
 
-    # resource: Resource = Relationship(back_populates="datasets")
-    tests: List["Run"] = Relationship(back_populates="dataset")
+class Dataset(DatasetBase, table=True):
+    """Class representing dataset SQL table."""
+
+    id: int | None = Field(default=None, primary_key=True)
+
+    tests: list["Run"] = Relationship(back_populates="dataset")
+
 
 ################ RUN
 
-# Base, Public, Table
+
 class Run(SQLModel, table=True):
+    """Class representing run SQL table."""
+
     id: int | None = Field(default=None, primary_key=True)
-    created_datetime : datetime = Field(default_factory=lambda: datetime.now())
+    created_datetime: datetime = Field(default_factory=lambda: datetime.now())
     device_id: int = Field(foreign_key="device.id")
     model_id: int = Field(foreign_key="model.id")
     dataset_id: int = Field(foreign_key="dataset.id")
@@ -94,20 +97,25 @@ class Run(SQLModel, table=True):
     device: Device = Relationship(back_populates="tests")
     model: Model = Relationship(back_populates="tests")
     dataset: Dataset = Relationship(back_populates="tests")
-    metrics: List["Metric"] = Relationship(back_populates="run")
+    metrics: list["Metric"] = Relationship(back_populates="run")
+
 
 # ############## METRIC
 
-# Base, Public, Create
+
 class MetricBase(SQLModel):
-    name : str = Field(index=True)
-    value : float = Field(index=True)
-    unit : str | None = None
+    """Class representing metric SQL table."""
 
-# Table
+    name: str = Field(index=True)
+    value: float = Field(index=True)
+    unit: str | None = None
+
+
 class Metric(MetricBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    category : MetricCategory = Field(index=True)
-    run_id : int = Field(foreign_key="run.id")
+    """Class representing metric SQL table."""
 
-    run : Run = Relationship(back_populates="metrics")
+    id: int | None = Field(default=None, primary_key=True)
+    category: MetricCategory = Field(index=True)
+    run_id: int = Field(foreign_key="run.id")
+
+    run: Run = Relationship(back_populates="metrics")

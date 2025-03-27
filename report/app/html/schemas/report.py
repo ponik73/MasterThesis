@@ -1,15 +1,18 @@
-from typing import List
+from database.models import Dataset, Device, Metric, Model
 from pydantic import BaseModel
-
-from database.models import Model, Metric, Dataset, Device
 
 
 class RunResults(BaseModel):
-        model: Model
-        latency_results: List[Metric]
-        dataset: Dataset
-        accuracy_results: List[Metric]
+    """Report template object used for display of a run."""
+
+    model: Model
+    latency_results: list[Metric]
+    dataset: Dataset
+    accuracy_results: list[Metric]
+
 
 class DeviceResults(BaseModel):
+    """Report template object used for display of a device."""
+
     device: Device
-    results: List[RunResults]
+    results: list[RunResults]

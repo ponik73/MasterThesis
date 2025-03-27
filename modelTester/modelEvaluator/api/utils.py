@@ -1,9 +1,11 @@
-import pickle
 import codecs
-from typing import Any    
+import pickle
+from typing import Any
+
 
 def encodeData(data: Any) -> bytes:
     return codecs.encode(pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL), "base64")
+
 
 def decodeData(data: bytes) -> Any:
     try:

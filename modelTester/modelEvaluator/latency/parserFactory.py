@@ -5,6 +5,7 @@ PARSER_REGISTRY = {
     "tflite": TFliteLatencyParser,
 }
 
+
 def latencyParserFactory(modelFramework: str) -> LatencyParser:
     """Returns the corresponding parser instance based on model framework."""
     parser_class = PARSER_REGISTRY.get(modelFramework.lower())

@@ -1,62 +1,102 @@
-from pathlib import Path
-from fastapi import HTTPException, UploadFile
 import subprocess
-import numpy as np
+from pathlib import Path
+from typing import Any
 
-from .interpreter import tfliteInterpreter
-from .config import getExecutablePath, getExecutableUrl
+from exceptions import (
+    ArchitectureDeterminationError,
+    ArchitectureNotSupportedError,
+    TFLiteLatencyError,
+    TFLiteLatencyExecutableDownloadError,
+)
+
 from ..schemas import Batch
-from exceptions import TFLiteLatencyError, TFLiteLatencyExecutableDownloadError, ArchitectureDeterminationError, ArchitectureNotSupportedError
+from .config import get_executable_path, get_executable_url
+from .interpreter import tflite_interpreter
 
-def latencyAssessmentTFlite(
-        modelPath: Path,
-        executableDir: Path
-    ):
+
+def latency_assessment_tflite(model_path: Path, executable_dir: Path) -> str:
+    """Latency assessment of specified model using `benchmark_model` executable.
+
+    :param model_path: path of evaluated model
+    :param executable_dir: path of directory where executable is (will be) stored
+    :return: Raw output of the `benchmark_model` executable.
+    """
     # Check if tflite latency executable is present:
-    executableDir.mkdir(parents=True, exist_ok=True)
-    executablePath = getExecutablePath(executableDir)
+    executable_dir.mkdir(parents=True, exist_ok=True)
+    executable_path = get_executable_path(executable_dir)
 
-    if not executablePath.exists(): # Download the executable:
-        architecture = _determineArchitecture()
+    if not executable_path.exists():  # Download the executable:
+        architecture = _determine_architecture()
         # Source of the executable:
-        url = getExecutableUrl(architecture)
+        url = get_executable_url(architecture)
         if not url:
             raise ArchitectureNotSupportedError(architecture)
         # Download:
-        _fetchLatencyExecutable(url, executablePath)
-        if not executablePath.exists():
+        _fetch_latency_executable(url, executable_path)
+        if not executable_path.exists():
             raise TFLiteLatencyExecutableDownloadError(url=url)
 
     # Run the assessment:
-    assessmentProcess = subprocess.run(f'{executablePath.as_posix()} --graph={modelPath.as_posix()}', capture_output=True, text=True, shell = True)
-    if assessmentProcess.returncode != 0 or not assessmentProcess.stdout:
-        raise TFLiteLatencyError(return_code=assessmentProcess.returncode, stderr=assessmentProcess.stderr)
+    assessment_process = subprocess.run(
+        f"{executable_path.as_posix()} --graph={model_path.as_posix()}",
+        capture_output=True,
+        text=True,
+        shell=True,
+        check=False,
+    )
+    if assessment_process.returncode != 0 or not assessment_process.stdout:
+        raise TFLiteLatencyError(return_code=assessment_process.returncode, stderr=assessment_process.stderr)
 
-    return assessmentProcess.stdout
+    return assessment_process.stdout
 
-def accuracyAssessmentTFlite(modelPath: Path, batch: Batch):
+
+def accuracy_assessment_tflite(model_path: Path, batch: Batch) -> list[dict[int, Any]]:
+    """Execute inference of a batch over specified model.
+
+    :param model_path: model that will be infered
+    :param batch: mode input batch
+    :return: List of dictionaries that contain output node value mapped to an index.
+    """
     # Check if interpeter instance is running, if not create an instance:
-    tfliteInterpreter.start(modelPath)
+    tflite_interpreter.start(model_path)
 
-    return tfliteInterpreter.inference(batch)
+    return tflite_interpreter.inference(batch)
 
-def getInputInfo(modelPath: Path):
-    if tfliteInterpreter.modelPath == modelPath:
-        return tfliteInterpreter.getInputDetails()
-    
-    tfliteInterpreter.start(modelPath)
-    return tfliteInterpreter.getInputDetails()
 
-def _determineArchitecture() -> str:
-    cmdResult = subprocess.run('uname -m', capture_output=True, text=True, shell = True)
-    if cmdResult.returncode != 0 or cmdResult.stderr:
+def get_input_info(model_path: Path) -> list[dict[str, Any]]:
+    """Get details of specified model's input nodes.
+
+    :param model_path: model path
+    :return: List of dictionaries containing node details
+    """
+    if tflite_interpreter.model_path == model_path:
+        return tflite_interpreter.get_input_details()
+
+    tflite_interpreter.start(model_path)
+    return tflite_interpreter.get_input_details()
+
+
+def _determine_architecture() -> str:
+    """Get name of the device's architecture.
+
+    :return: architecture literal
+    """
+    cmd_result = subprocess.run("uname -m", capture_output=True, text=True, shell=True, check=False)
+    if cmd_result.returncode != 0 or cmd_result.stderr:
         raise ArchitectureDeterminationError
-    return cmdResult.stdout.strip()
+    return cmd_result.stdout.strip()
 
-def _fetchLatencyExecutable(url: str, executablePath: Path):
+
+def _fetch_latency_executable(url: str, executable_path: Path) -> None:
+    """Download and store `benchmark_model` executable.
+
+    :param url: executable url
+    :param executable_path: path of file where executable will be stored
+    """
     import urllib.request
+
     try:
-        urllib.request.urlretrieve(url, executablePath)
-        executablePath.chmod(0o755)
+        urllib.request.urlretrieve(url, executable_path)
+        executable_path.chmod(0o755)
     except Exception as e:
-        raise TFLiteLatencyExecutableDownloadError(url=url)
+        raise TFLiteLatencyExecutableDownloadError(url=url) from e

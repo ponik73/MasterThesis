@@ -24,7 +24,9 @@ ignore = [
     "COM812",  # Conflicts with "ruff format" command
     "ISC001",  # Conflicts with "ruff format" command
     "TD003",   # Ignore JIRA issue link for each TODO comment (too demanding)
-    "S507"     # Ignore check for auto-adding the SSH host into 'know_hosts' file, there is prerequisite that user will connect only to trusted devices
+    "S507",     # Ignore check for auto-adding the SSH host into 'know_hosts' file, there is prerequisite that user will connect only to trusted devices
+    "S301",     # Pickle
+    "FAST001"   # Fastapi response model redundancy
 ]
 
 [tool.ruff.lint.per-file-ignores]
