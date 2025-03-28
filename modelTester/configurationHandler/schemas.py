@@ -23,7 +23,7 @@ class _DeviceCredentials(BaseModel):
 class Device(BaseModel):
     name: str
     uri: str
-    credentials: _DeviceCredentials
+    credentials: _DeviceCredentials = _DeviceCredentials()
     sys_name : str | None = None
     kernel_version : str | None = None
     distinctAttributes : List[str] = ["name"]
