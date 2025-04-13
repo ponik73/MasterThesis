@@ -1,8 +1,7 @@
 from typing import Dict, List, Type
 
 from modelEvaluator.accuracy.metrics.metric import Metric
-from modelEvaluator.accuracy.metrics import classification
-from modelEvaluator.accuracy.metrics import semantic_segmentation
+from modelEvaluator.accuracy.metrics import classification, semantic_segmentation, object_detection
 from configurationHandler.schemas import SupportedTasks
 
 TASK_METRIC_MAPPING : Dict[SupportedTasks, List[type[Metric]]] = {
@@ -25,7 +24,8 @@ TASK_METRIC_MAPPING : Dict[SupportedTasks, List[type[Metric]]] = {
         # semantic_segmentation.HausdorffDistanceEuclidean
     ],
     SupportedTasks.OBJECT_DETECTION : [
-        
+        object_detection.IntersectionOverUnion,
+        object_detection.MeanAveragePrecisionMacro
     ]
 }
 

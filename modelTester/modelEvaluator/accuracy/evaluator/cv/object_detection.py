@@ -21,21 +21,23 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
         self.categoriesKey = ['objects', 'categories'] # TODO modify config (all the keys will be lists/tuples)
 
     def evaluate(self):
-        # Resize images:
         inputShape : List[int] = self.modelInputs[0]["shape"]
         targetSize = (inputShape[1], inputShape[2])
-        transformedDataset = resizeImages(
-            dataset=self.dataset.dataset,
-            columns={
-                self.imageKey: (targetSize, "RGB")
-            }
-        )
+
         # Resize bboxes:
         transformedDataset = resize_bboxes(
-            dataset=transformedDataset,
+            dataset=self.dataset.dataset,
             targetSize=targetSize,
             imgKey=self.imageKey,
             bboxKey=self.bboxKey
+        )
+
+        # Resize images:
+        transformedDataset = resizeImages(
+            dataset=transformedDataset,
+            columns={
+                self.imageKey: (targetSize, "RGB")
+            }
         )
 
         # Create data loader and batches:
@@ -72,16 +74,34 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
             
             # Decode inference result and append it to the predictions:
             modelOutputs : List[Dict[int, np.typing.NDArray[Any]]] = np.array(decodeData(encodedOutputs))
-            
-            predictions, targets, num_classes = self.align_function.call(
+
+            predictions, targets, box_format = self.align_function.call(
                 predictions=modelOutputs,
-                targets=list(zip(bboxes, categories))
+                targets=(bboxes, categories)
             )
 
+            empty = []
+            _predictions = []
+            _targets = []
+            for i, x in enumerate(predictions):
+                if len(x["boxes"]) == 0:
+                    empty.append(i)
+                    continue
+                x["boxes"] = torch.tensor(x["boxes"])
+                x["scores"] = torch.tensor(x["scores"])
+                x["labels"] = torch.tensor(x["labels"])
+                _predictions.append(x)
+            for i, x in enumerate(targets):
+                if i in empty:
+                    continue
+                x["boxes"] = torch.tensor(x["boxes"])
+                x["labels"] = torch.tensor(x["labels"])
+                _targets.append(x)
+
             if len(self.metrics) == 0:
-                self.initMetrics(**{"num_classes": num_classes})
+                self.initMetrics(**{"box_format": box_format})
             
-            self.updateMetrics(torch.tensor(predictions), torch.tensor(targets))
+            self.updateMetrics(_predictions, _targets)
         
         return self.computeMetrics()
 

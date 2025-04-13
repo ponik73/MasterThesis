@@ -4,6 +4,7 @@ kagglehub
 pillow
 torch
 torchmetrics
+torchmetrics[detection]
 
 asyncssh
 python-certifi-win32
