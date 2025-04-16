@@ -7,30 +7,30 @@
     ],
     "models": [
         {
-            "name": "deeplabv3",
-            "task": "semantic-segmentation",
-            "platform": "kaggle",
-            "uri": "tensorflow/deeplabv3/tfLite/default"
+            "name": "efficientdet",
+            "task": "object-detection",
+            "platform": "hf",
+            "uri": "jakubkasem/nicemodel/blob/main/yolov8m_full_integer_quant.tflite"
         }
     ],
     "datasets": [
         {
-            "name": "pascal_voc_2012_semantic_segmentation",
+            "name": "coco2017",
             "platform": "hf",
-            "uri": "jakubkasem/pascal_voc_2012",
+            "uri": "jakubkasem/coco2017",
             "dataset_keys": {
                 "input": "image",
-                "target": "annotation"
+                "target": "objects"
             }
         }
     ],
     "runs": [
         {
             "device_name": "localhost",
-            "model_name": "deeplabv3",
-            "dataset_name": "pascal_voc_2012_semantic_segmentation",
+            "model_name": "efficientdet",
+            "dataset_name": "coco2017",
             "required_script_paths": {
-                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/deeplab_segmentation.py"
+                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/efficientdet_detection.py"
             }
         }
     ]
