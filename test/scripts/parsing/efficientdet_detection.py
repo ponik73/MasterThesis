@@ -1,6 +1,6 @@
-import numpy as np
-from numpy.typing import NDArray
 import cv2
+import numpy as np
+
 
 def postprocess_raw_detections(output):
     boxes = []
@@ -10,20 +10,16 @@ def postprocess_raw_detections(output):
     for pred in output:
         pred = np.transpose(pred)
         for box in pred:
-                x, y, w, h = box[:4]
-                x1 = x - w / 2
-                y1 = y - h / 2
-                boxes.append([x1, y1, w, h])
-                idx = np.argmax(box[4:])
-                scores.append(box[idx + 4])
-                class_ids.append(idx)
+            x, y, w, h = box[:4]
+            x1 = x - w / 2
+            y1 = y - h / 2
+            boxes.append([x1, y1, w, h])
+            idx = np.argmax(box[4:])
+            scores.append(box[idx + 4])
+            class_ids.append(idx)
     indices = cv2.dnn.NMSBoxes(boxes, scores, 0.5, 0.5)
-    
-    d = {
-        "boxes": [],
-        "scores": [],
-        "labels": []
-    }
+
+    d = {"boxes": [], "scores": [], "labels": []}
     for i in indices:
         score = scores[i]
         if score > 0.25:
@@ -33,9 +29,10 @@ def postprocess_raw_detections(output):
 
     return d
 
+
 def align_target_predicted(predictions, targets):
     predictions = np.array([x[517].squeeze() for x in predictions])
-    
+
     zero_point = -128
     scale = 0.005322090815752745
     predictions = (predictions.astype(np.float32) - zero_point) * scale
@@ -51,9 +48,6 @@ def align_target_predicted(predictions, targets):
     boxes, labels = targets
     _targets = []
     for i, b in enumerate(boxes):
-        _targets.append({
-            "boxes": b,
-            "labels": labels[i]
-        })
+        _targets.append({"boxes": b, "labels": labels[i]})
 
-    return _predictions, _targets, 'xywh'
+    return _predictions, _targets, "xywh"

@@ -1,8 +1,6 @@
 from configurationHandler.schemas import SupportedTasks
-from modelEvaluator.accuracy.metrics import classification, semantic_segmentation
+from modelEvaluator.accuracy.metrics import classification, object_detection, semantic_segmentation
 from modelEvaluator.accuracy.metrics.metric import Metric
-from modelEvaluator.accuracy.metrics import classification, semantic_segmentation, object_detection
-from configurationHandler.schemas import SupportedTasks
 
 TASK_METRIC_MAPPING: dict[SupportedTasks, list[type[Metric]]] = {
     SupportedTasks.IMAGE_CLASSIFICATION: [
@@ -22,10 +20,10 @@ TASK_METRIC_MAPPING: dict[SupportedTasks, list[type[Metric]]] = {
         semantic_segmentation.DiceScoreMicro,
         semantic_segmentation.DiceScoreMacro,
     ],
-    SupportedTasks.OBJECT_DETECTION : [
+    SupportedTasks.OBJECT_DETECTION: [
         object_detection.IntersectionOverUnion,
-        object_detection.MeanAveragePrecisionMacro
-    ]
+        object_detection.MeanAveragePrecisionMacro,
+    ],
 }
 
 

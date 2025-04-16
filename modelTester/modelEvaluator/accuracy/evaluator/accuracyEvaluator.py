@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Any
 
 from configurationHandler.schemas import Dataset, Model
 from modelEvaluator.accuracy.metrics.metric import Metric, MetricResult
@@ -55,7 +56,7 @@ class AccuracyEvaluator(ABC):
     def _metrics(self) -> list[type[Metric]]:
         return get_metrics_for_task(self.model.task)
 
-    def init_metrics(self, **kwargs) -> None:
+    def init_metrics(self, **kwargs: dict[str, Any]) -> None:
         """Instantiate metric objects with given parameters."""
         for m in self._metrics():
             self.metrics.append(m(**kwargs))
