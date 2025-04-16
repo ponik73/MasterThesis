@@ -3,14 +3,14 @@ from typing import Any
 import numpy as np
 import torch
 from configurationHandler.schemas import Dataset, Model
-from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.accuracy.metrics.metric import MetricResult
+from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.api.utils import decodeData, encodeData
+from modelEvaluator.exceptions import OndeviceInferenceError
 from torch.utils.data import DataLoader
 
 from ..accuracyEvaluator import AccuracyEvaluator
 from .utils import nested_read, resize_bboxes, resizeImages
-from modelEvaluator.exceptions import OndeviceInferenceError
 
 
 class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):

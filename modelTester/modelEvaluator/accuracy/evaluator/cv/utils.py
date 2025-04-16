@@ -1,14 +1,14 @@
-from typing import Literal
 from collections.abc import Callable
+from typing import Literal
+
 from datasets import Dataset as hfDataset
 from multiprocess.pool import Pool
 from PIL import Image
 
 
 def resize_images(dataset: hfDataset, columns: dict[str, tuple[tuple[int, int], Literal["RGB"]]]) -> hfDataset:
-    """
-    Resize images in a Hugging Face dataset to specified dimensions and color modes.
-    """
+    """Resize images in a Hugging Face dataset to specified dimensions and color modes."""
+
     def transforms_wrapper(key: str, target_size: tuple[int, int], mode: str) -> Callable:
         def transforms(item):
             image: Image.Image = item[key]
@@ -25,7 +25,9 @@ def resize_images(dataset: hfDataset, columns: dict[str, tuple[tuple[int, int], 
     return transformed_dataset
 
 
-def _resize_bboxes(bboxes: list[list[float]], orig_size: tuple[int, int], new_size: tuple[int, int])  -> list[list[float]]:
+def _resize_bboxes(
+    bboxes: list[list[float]], orig_size: tuple[int, int], new_size: tuple[int, int]
+) -> list[list[float]]:
     w_orig, h_orig = orig_size
     w_new, h_new = new_size
     scale_x = w_new / w_orig
@@ -47,9 +49,8 @@ def resize_bboxes(
     img_key: str,
     bbox_key: list[str],
 ) -> hfDataset:
-    """
-    Resize bounding boxes in a Hugging Face dataset to reflect new image dimensions.
-    """
+    """Resize bounding boxes in a Hugging Face dataset to reflect new image dimensions."""
+
     def transforms(item):
         image: Image.Image = item[img_key]
         w_orig, h_orig = image.width, image.height
@@ -62,9 +63,7 @@ def resize_bboxes(
 
 
 def nested_read(row, keys: list):
-    """
-    Recursively retrieve a nested value from a dictionary using a list of keys.
-    """
+    """Recursively retrieve a nested value from a dictionary using a list of keys."""
     obj = row[keys[0]]
     if len(keys[1:]) < 1:
         return obj
