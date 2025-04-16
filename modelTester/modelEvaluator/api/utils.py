@@ -3,12 +3,11 @@ import pickle
 from typing import Any
 
 
-def encodeData(data: Any) -> bytes:
+def encode_data(data: Any) -> bytes:  # noqa: ANN401
+    """Encode given data to bytes."""
     return codecs.encode(pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL), "base64")
 
 
-def decodeData(data: bytes) -> Any:
-    try:
-        return pickle.loads(codecs.decode(data, "base64"))
-    except Exception as e:
-        raise Exception(f"Error during decoding data. Reason: '{e}'.") from e
+def decode_data(data: bytes) -> Any:  # noqa: ANN401
+    """Decode given bytes."""
+    return pickle.loads(codecs.decode(data, "base64"))

@@ -10,6 +10,8 @@ from .metric import Metric
 
 
 class AccuracyMicro(Metric):
+    """Micro accuracy classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -21,9 +23,10 @@ class AccuracyMicro(Metric):
 
 
 class AccuracyMacro(Metric):
-    """Metric constructor."""
+    """Macro accuracy classification metric."""
 
     def __init__(self, num_classes: int) -> None:
+        """Metric constructor."""
         super().__init__()
         self.torch_metric = MulticlassAccuracy(num_classes=num_classes, average="macro")
 
@@ -33,6 +36,8 @@ class AccuracyMacro(Metric):
 
 
 class RecallMacro(Metric):
+    """Macro recall classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -44,6 +49,8 @@ class RecallMacro(Metric):
 
 
 class RecallMicro(Metric):
+    """Micro recall classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -55,6 +62,8 @@ class RecallMicro(Metric):
 
 
 class F1Macro(Metric):
+    """Macro F1 score classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -66,6 +75,8 @@ class F1Macro(Metric):
 
 
 class F1Micro(Metric):
+    """Micro F1 score classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -77,6 +88,8 @@ class F1Micro(Metric):
 
 
 class PrecisionMacro(Metric):
+    """Macro precision classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -88,6 +101,8 @@ class PrecisionMacro(Metric):
 
 
 class PrecisionMicro(Metric):
+    """Micro precision classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -99,6 +114,8 @@ class PrecisionMicro(Metric):
 
 
 class SpecificityMacro(Metric):
+    """Macro specificity classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()
@@ -110,6 +127,8 @@ class SpecificityMacro(Metric):
 
 
 class SpecificityMicro(Metric):
+    """Micro specificity classification metric."""
+
     def __init__(self, num_classes: int) -> None:
         """Metric constructor."""
         super().__init__()

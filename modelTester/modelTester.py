@@ -1,17 +1,17 @@
 import argparse
+import sys
 
 import numpy as np
 from configuration import get_settings
-from configurationHandler.cfgParser import ConfigParser
+from configurationHandler.cfg_parser import ConfigParser
 from downloader.controller import DownloaderController
 from modelEvaluator.controller import EvaluatorController
 
-argParser = argparse.ArgumentParser()
-argParser.add_argument("--cfg", type=str, action="store", dest="path_cfg", help="Path to config")
-# argParser.add_argument("--cfg-help", default=False, action="store_true", help="Prints configuration file description.")
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument("--cfg", type=str, action="store", dest="path_cfg", help="Path to config")
 
-argParser.usage = "<pyhon> modelTester.py --cfg=<PATH_CFG>"
-argParser.description = "a"
+arg_parser.usage = "<pyhon> modelTester.py --cfg=<PATH_CFG>"
+arg_parser.description = "a"
 
 # TODO: suppress the prints from the libraries; print only this program messages
 # import sys
@@ -19,22 +19,23 @@ argParser.description = "a"
 
 if __name__ == "__main__":
     SEED = 690
-    np.random.seed(SEED)
+    rng = np.random.default_rng(SEED)
+    rng.normal()
 
-    args = argParser.parse_args()
+    args = arg_parser.parse_args()
 
     # Required argument for application run:
     if not args.path_cfg:
         print("the following arguments are required: --cfg")
-        exit(2)
+        sys.exit(2)
 
     # Configuration handler - parse cfg file:
-    cfgParser = ConfigParser(args.path_cfg)
+    cfg_parser = ConfigParser(args.path_cfg)
     # Configuration for Downloader component:
-    models, datasets = cfgParser.getDownloaderCfg()
+    models, datasets = cfg_parser.get_downloader_cfg()
     # Configuration for Model Evaluator component:
-    devices, runs = cfgParser.getEvaluatorCfg()
-    # del cfgParser
+    devices, runs = cfg_parser.get_evaluator_cfg()
+    # del cfg_parser
 
     # Model Evaluator - initialization:
     print("#" * 10 + "\n" + "DISCOVERING DEVICES\n" + "#" * 10 + "\n")
@@ -45,12 +46,12 @@ if __name__ == "__main__":
     downloader = DownloaderController(models, datasets)
     models, datasets = downloader.download()
     # Pass downloaded items to the Model Evaluator:
-    evaluator.setModels(models)
-    evaluator.setDatasets(datasets)
+    evaluator.set_models(models)
+    evaluator.set_datasets(datasets)
 
     print("#" * 10 + "\n" + "EXECUTING RUNS\n" + "#" * 10 + "\n")
-    evaluator.createPipelines()
-    evaluator.executePipelines()
+    evaluator.create_pipelines()
+    evaluator.execute_pipelines()
 
     print("#" * 10 + "\n" + "GENERATING REPORT\n" + "#" * 10 + "\n")
     report_path = evaluator.get_report()

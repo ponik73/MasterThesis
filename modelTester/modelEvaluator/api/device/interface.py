@@ -1,37 +1,49 @@
+from __future__ import annotations
+
 import asyncio
 import re
 import time
-from http.client import HTTPConnection
 from pathlib import Path
-from typing import Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import asyncssh
-from configuration import DockerHubPath, get_settings
-from configurationHandler.schemas import Device
 from pydantic_core import Url
 
+if TYPE_CHECKING:
+    from http.client import HTTPConnection
+
+    from configurationHandler.schemas import Device
+
+from configuration import DockerHubPath, get_settings
 from modelEvaluator.api.device.calls import (
-    evaluateLatencyTfliteCall,
-    getFingerprintCall,
-    getModelInputInfoTfliteCall,
-    isServerUpCall,
-    predictTfliteCall,
-    uploadModelCall,
+    evaluate_latency_tflite_call,
+    get_fingerprint_call,
+    get_model_input_info_tflite_call,
+    is_server_up_call,
+    predict_tflite_call,
+    upload_model_call,
 )
-from modelEvaluator.exceptions import DeviceApiInitError
+from modelEvaluator.exceptions import (
+    DeviceApiInitError,
+    FrameworkNotSupportedError,
+    ModelUploadError,
+)
 
 
 class DeviceInterface:
-    def __init__(self, device: Device):
+    """Class defining interface for communication with embedded device."""
+
+    def __init__(self, device: Device) -> None:
+        """DeviceInterface constructor."""
         self.url: Url | None = None
         self.device = device
         self.conn: HTTPConnection | None = None
 
         self.url = Url.build(scheme="http", host=self.device.uri, port=8000)
 
-        asyncio.get_event_loop().run_until_complete(self._initializeApi())
+        asyncio.get_event_loop().run_until_complete(self._initialize_api())
 
-    async def _createSshConnection(self) -> asyncssh.SSHClientConnection:
+    async def _create_ssh_connection(self) -> asyncssh.SSHClientConnection:
         """Create SSH connection with remote device.
 
         :return: Estabilished ssh communication channel between PC and remote device.
@@ -58,7 +70,8 @@ class DeviceInterface:
         )
 
         if not result.stdout:
-            raise DeviceApiInitError("Could not list remote device free ports.")
+            error_message = "Could not list remote device free ports."
+            raise DeviceApiInitError(error_message)
 
         result_std_output = result.stdout.decode() if type(result.stdout) is bytes else cast(str, result.stdout)
         # strip newline char from each record
@@ -75,11 +88,10 @@ class DeviceInterface:
 
         result = await conn.run(f'docker container ls --filter=ancestor={image} --format "{{{{.ID}}}}\n{{{{.Ports}}}}"')
         if result.exit_status != 0:
-            raise DeviceApiInitError("Unable to check if the device API container is running.")
+            error_message = "Unable to check if the device API container is running."
+            raise DeviceApiInitError(error_message)
         lines = result.stdout.splitlines()
         if len(lines) > 1:
-            container_id = lines[0]
-
             port_match = re.search(r"0.0.0.0:\S+\->(?P<port>.*?)/\S+", lines[1])
             if port_match is not None:
                 port = int(port_match.group("port"))
@@ -89,22 +101,24 @@ class DeviceInterface:
     async def _pull_and_run_docker(self, conn: asyncssh.SSHClientConnection, image: DockerHubPath) -> int:
         result = await conn.run(f"docker pull {image}")
         if result.exit_status != 0:
-            raise DeviceApiInitError("Unable to pull the device API image.")
+            error_message = "Unable to pull the device API image."
+            raise DeviceApiInitError(error_message)
 
         port = await self._get_free_port(conn)
 
         # Run the API in container:
         result = await conn.run(f"docker run -e SYS_NAME=`uname -n` -d -p {port}:{port} {image}")
         if result.exit_status != 0:
-            raise DeviceApiInitError("Unable to start the device API container.")
+            error_message = "Unable to start the device API container."
+            raise DeviceApiInitError(error_message)
 
         return port
 
-    async def _initializeApi(self):
+    async def _initialize_api(self) -> None:
         settings = get_settings()
         port: int | None = None
 
-        async with await self._createSshConnection() as conn:
+        async with await self._create_ssh_connection() as conn:
             port = await self._check_for_docker_container(conn=conn, image=settings.DOCKER_DEVICE_API_PATH)
             if port is None:
                 port = await self._pull_and_run_docker(conn=conn, image=settings.DOCKER_DEVICE_API_PATH)
@@ -118,64 +132,61 @@ class DeviceInterface:
             server_up = False
 
             while (time.time() - start_time < timeout) and (not server_up):
-                time.sleep(1)
-                server_up = isServerUpCall(url=self.url)
+                asyncio.sleep(1)
+                server_up = is_server_up_call(url=self.url)
 
             if not server_up:
-                raise DeviceApiInitError("Device API container is not running.")
+                error_message = "Device API container is not running."
+                raise DeviceApiInitError(error_message)
 
-    def get_fingerprint(self):
-        try:
-            callArgs = {"headers": {"accept": "application/json"}}
+    def get_fingerprint(self) -> None:
+        """Get device fingerprint."""
+        call_args = {"headers": {"accept": "application/json"}}
 
-            sys_name, kernel_version = getFingerprintCall(url=self.url, **callArgs)
+        sys_name, kernel_version = get_fingerprint_call(url=self.url, **call_args)
 
-            if sys_name is None or kernel_version is None:
-                raise
-
-            self.device.sys_name = sys_name.strip()
-            self.device.kernel_version = kernel_version.strip()
-        except Exception as e:
-            print(f"Unable to retrieve fingerprint of device: `{self.device.name}` at `{self.url}`. Reason: {e}")
+        self.device.sys_name = sys_name.strip()
+        self.device.kernel_version = kernel_version.strip()
 
     def upload_model(self, model_path: Path, model_custom_name: str) -> bool:
+        """Upload model to device."""
         try:
-            callArgs = {
-                "headers": {
-                    "accept": "application/json",
-                    # requests won't add a boundary if this header is set when you pass files=
-                    # 'Content-Type': 'multipart/form-data',
-                },
-                "files": {
-                    "customName": (None, model_custom_name),
-                    "modelFile": open(model_path, "rb"),
-                },
-            }
+            with Path(model_path).open("rb") as model_file:
+                call_args = {
+                    "headers": {
+                        "accept": "application/json",
+                        # requests won't add a boundary if this header is set when you pass files=
+                        # 'Content-Type': 'multipart/form-data',
+                    },
+                    "files": {
+                        "customName": (None, model_custom_name),
+                        "modelFile": model_file,
+                    },
+                }
 
-            uploadModelCall(url=self.url, **callArgs)
-            return True
-        except Exception as e:
-            print(f"Unable to upload model `{model_custom_name}` to device: `{self.name}` at `{self.url}`. Reason: {e}")
+            upload_model_call(url=self.url, **call_args)
+        except ModelUploadError:
+            print(f"Unable to upload model `{model_custom_name}` to device: `{self.name}` at `{self.url}`.")
             return False
+        else:
+            return True
 
-    def getModelInputInfo(self, model_custom_name: str, modelFramework: Literal["tflite"]) -> list[dict]:
-        try:
-            callArgs = {
-                "headers": {
-                    "accept": "application/json",
-                },
-                "params": {"model_custom_name": model_custom_name},
-            }
+    def get_model_input_info(self, model_custom_name: str, model_framework: Literal["tflite"]) -> list[dict]:
+        """Get the model's input node info."""
+        call_args = {
+            "headers": {
+                "accept": "application/json",
+            },
+            "params": {"model_custom_name": model_custom_name},
+        }
 
-            if modelFramework == "tflite":
-                return getModelInputInfoTfliteCall(url=self.url, **callArgs)
-            raise Exception(f"{modelFramework} framework not supported.")
-        except Exception as e:
-            print(f"Unable to retrieve model input details `{model_custom_name}`. Reason: {e}")
-            return []
+        if model_framework == "tflite":
+            return get_model_input_info_tflite_call(url=self.url, **call_args)
+        raise FrameworkNotSupportedError(model_framework)
 
-    def evaluateLatency(self, model_custom_name: str, modelFramework: Literal["tflite"]) -> str | None:
-        callArgs = {
+    def evaluate_latency(self, model_custom_name: str, model_framework: Literal["tflite"]) -> str | None:
+        """Evaluate latency ondevice."""
+        call_args = {
             "headers": {
                 "accept": "application/json",
                 # requests won't add a boundary if this header is set when you pass files=
@@ -184,30 +195,24 @@ class DeviceInterface:
             "files": {"model_custom_name": (None, model_custom_name)},
         }
 
-        if modelFramework == "tflite":
-            return evaluateLatencyTfliteCall(url=self.url, **callArgs)
-        raise Exception(f"{modelFramework} framework not supported.")
+        if model_framework == "tflite":
+            return evaluate_latency_tflite_call(url=self.url, **call_args)
+        raise FrameworkNotSupportedError(model_framework)
 
-    def predict(self, model_custom_name: str, modelFramework: Literal["tflite"], encoded_batch: bytes) -> bytes | None:
-        try:
-            callArgs = {
-                "headers": {
-                    "accept": "application/json",
-                    # requests won't add a boundary if this header is set when you pass files=
-                    # 'Content-Type': 'multipart/form-data',
-                },
-                "files": {
-                    "batch": encoded_batch,  # open('bla.npy', 'rb'),
-                    "model_custom_name": (None, model_custom_name),
-                },
-            }
+    def predict(self, model_custom_name: str, model_framework: Literal["tflite"], encoded_batch: bytes) -> bytes | None:
+        """Execute ondevice model inference for given batch."""
+        call_args = {
+            "headers": {
+                "accept": "application/json",
+                # requests won't add a boundary if this header is set when you pass files=
+                # 'Content-Type': 'multipart/form-data',
+            },
+            "files": {
+                "batch": encoded_batch,
+                "model_custom_name": (None, model_custom_name),
+            },
+        }
 
-            if modelFramework == "tflite":
-                return predictTfliteCall(url=self.url, **callArgs)
-            raise Exception(f"{modelFramework} framework not supported.")
-
-        except Exception as e:
-            print(
-                f"Unable to evaluate accuracy for model `{model_custom_name}` on device: `{self.device.name}` at `{self.url}`. Reason: {e}"
-            )
-            return None
+        if model_framework == "tflite":
+            return predict_tflite_call(url=self.url, **call_args)
+        raise FrameworkNotSupportedError(model_framework)

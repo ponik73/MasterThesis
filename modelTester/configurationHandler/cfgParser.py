@@ -1,46 +1,43 @@
 import json
+from pathlib import Path
 
 from .schemas import Config, Dataset, Device, Model, Run  # , DownloaderConfiguration
 
 
 class ConfigParser:
     """Configuration parser - class for parsing given configuration file (--cfg argument).
+
     The configuration file is parsed and validated during instance initialization.
     """
 
-    def __init__(self, pathCfg: str):
-        try:
-            # Read JSON:
-            self.dictCfg = self._readCfg(pathCfg)
+    def __init__(self, path_cfg: str) -> None:
+        """Create ConfigParser instance.
 
-            self.cfg = Config.model_validate(self._readCfg(pathCfg))
+        :param path_cfg: JSON configuration path
+        """
+        # Read JSON:
+        self.dictCfg = self._read_cfg(path_cfg)
 
-            # TODO: distinct names reimplement (check for name conflicts within each of: models, datasets, devices)
+        self.cfg = Config.model_validate(self._read_cfg(path_cfg))
 
-            self._filterWrtRuns()
-        except Exception as ex:
-            raise ex
+        # TODO: distinct names reimplement (check for name conflicts within each of: models, datasets, devices)
 
-    def _readCfg(self, path: str) -> dict:
+        self._filter_wrt_runs()
+
+    def _read_cfg(self, path: str) -> dict:
         """Load json file."""
-        with open(path) as f:
+        with Path(path).open("r") as f:
             return json.load(f)
 
-    def _distinctAttributes(self, objects: list, groupName: str, attributes: list[str]):
-        """Check for conflicts in given attributes within objects of same class."""
-        for attr in attributes:
-            if len({o.__getattribute__(attr) for o in objects}) != len(objects):
-                raise Exception(f"{groupName} cannot share same {attr}")
-
-    def _filterWrtRuns(self) -> None:
+    def _filter_wrt_runs(self) -> None:
         # Check if all runs work with valid names:
         def valid_run(r: Run) -> tuple[bool, str]:
-            if r.modelName not in [x.name for x in self.cfg.models]:
-                return False, r.modelName
-            if r.datasetName not in [x.name for x in self.cfg.datasets]:
-                return False, r.datasetName
-            if r.deviceName not in [x.name for x in self.cfg.devices]:
-                return False, r.deviceName
+            if r.model_name not in [x.name for x in self.cfg.models]:
+                return False, r.model_name
+            if r.dataset_name not in [x.name for x in self.cfg.datasets]:
+                return False, r.dataset_name
+            if r.device_name not in [x.name for x in self.cfg.devices]:
+                return False, r.device_name
             return True, ""
 
         for r in self.cfg.runs:
@@ -50,18 +47,21 @@ class ConfigParser:
                 print(f"Run {vars(r)} contains invalid reference `{ref}`")
 
         # Remove items not mentioned in runs:
-        usedModelNames = {x.modelName for x in self.cfg.runs}  # Names of models used in any run
-        usedDatasetNames = {x.datasetName for x in self.cfg.runs}  # Names of datasets used in any run
-        usedDevicesNames = {x.deviceName for x in self.cfg.runs}  # Names of devices used in any run
+        used_model_names = {x.model_name for x in self.cfg.runs}  # Names of models used in any run
+        used_dataset_names = {x.dataset_name for x in self.cfg.runs}  # Names of datasets used in any run
+        used_devices_names = {x.device_name for x in self.cfg.runs}  # Names of devices used in any run
 
-        self.cfg.models = [x for x in self.cfg.models if x.name in usedModelNames]  # Filtered models
-        self.cfg.datasets = [x for x in self.cfg.datasets if x.name in usedDatasetNames]  # Filtered datasets
-        self.cfg.devices = [x for x in self.cfg.devices if x.name in usedDevicesNames]  # Filtered devices
+        self.cfg.models = [x for x in self.cfg.models if x.name in used_model_names]  # Filtered models
+        self.cfg.datasets = [x for x in self.cfg.datasets if x.name in used_dataset_names]  # Filtered datasets
+        self.cfg.devices = [x for x in self.cfg.devices if x.name in used_devices_names]  # Filtered devices
 
-    def getDownloaderCfg(self) -> tuple[list[Model], list[Dataset]]:
-        """Returns configuration for Downloader component. Dictionary containing parsed models and datasets (models and datasets defined in `run` only)."""
+    def get_downloader_cfg(self) -> tuple[list[Model], list[Dataset]]:
+        """Return configuration for Downloader component.
+
+        Dictionary containing parsed models and datasets (models and datasets defined in `run` only).
+        """
         return self.cfg.models, self.cfg.datasets
 
-    def getEvaluatorCfg(self) -> tuple[list[Device], list[Run]]:
-        """Returns configuration for Model Evaluator component (parsed devices and runs)"""
+    def get_evaluator_cfg(self) -> tuple[list[Device], list[Run]]:
+        """Return configuration for Model Evaluator component (parsed devices and runs)."""
         return self.cfg.devices, self.cfg.runs

@@ -33,9 +33,8 @@ def register_run(run: RegisterRunInput, db: Annotated[Session, Depends(get_sessi
         run_id=register_run_service(
             device=run.device,
             model=run.model,
-            latency_metrics=run.latency_metrics,
+            metrics=(run.latency_metrics, run.accuracy_metrics),
             dataset=run.dataset,
-            accuracy_metrics=run.accuracy_metrics,
             db=db,
         )
     )

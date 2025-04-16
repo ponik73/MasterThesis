@@ -6,6 +6,7 @@ from typing import Any, Literal
 from database.enumerated import MetricCategory
 from database.models import Dataset, Device, Model, Run
 from database.services import get_all_objects_by_properties, get_latest_run, get_runs_with_sys_name
+from exceptions import InvalidDatasetIdError, InvalidDeviceNameError, InvalidKernelError, InvalidModelIdError
 from jinja2 import Template
 from sqlmodel import Session, SQLModel
 
@@ -20,6 +21,19 @@ def generate_comparison(
     kernel_version_a: str | None = None,
     kernel_version_b: str | None = None,
 ) -> str:
+    """Generate an HTML comparison report (either latency or accuracy) using provided filters.
+
+    :param db: SQLAlchemy database session.
+    :param template: Jinja2 template used for rendering the comparison report.
+    :param comparison_type: The type of comparison report to generate. Either 'accuracy' or 'latency'.
+    :param model_id: ID of the model to filter results by.
+    :param dataset_id: ID of the dataset (only applicable for accuracy comparison).
+    :param device_name: System name of the device to filter results by.
+    :param kernel_version_a: Kernel version for the first side of comparison.
+    :param kernel_version_b: Kernel version for the second side of comparison.
+
+    :return: Rendered HTML string of the comparison report.
+    """
     # Fetch base objects
     all_models: list[Model] = get_all_objects_by_properties(db_object_class=Model, db=db)
     all_devices: list[Device] = get_all_objects_by_properties(db_object_class=Device, db=db)
@@ -32,51 +46,38 @@ def generate_comparison(
     kernel_versions: list[str] = []
     table_rows: list[tuple[tuple[str, str], str, str, float]] = []
 
-    # Model ID filtering
-    if model_id is not None:
-        # Validate model ID
-        assert model_id in [x.id for x in all_models], "Invalid model ID"
+    # Model ID filtering:
+    all_devices, all_datasets = _filter_by_model_id(
+        db=db,
+        comparison_type=comparison_type,
+        model_id=model_id,
+        list_model_ids=[x.id for x in all_models],
+        list_devices=all_devices,
+        list_datasets=all_datasets,
+    )
 
-        all_devices = _filter_by_related_runs(db=db, list_filtered=all_devices, filter_pairs=[("model_id", model_id)])
-
-        # Filter datasets for accuracy comparison
-        if comparison_type == "accuracy":
-            all_datasets = _filter_by_related_runs(
-                db=db, list_filtered=all_datasets, filter_pairs=[("model_id", model_id)]
-            )
-
-    # Dataset ID filtering (only for accuracy)
+    # Dataset ID filtering (only for accuracy):
     if comparison_type == "accuracy" and dataset_id is not None:
-        # Validate dataset ID
-        assert dataset_id in [x.id for x in all_datasets], "Invalid dataset ID"
-
-        # Filter models and devices
-        all_models = _filter_by_related_runs(db=db, list_filtered=all_models, filter_pairs=[("dataset_id", dataset_id)])
-
-        all_devices = _filter_by_related_runs(
-            db=db, list_filtered=all_devices, filter_pairs=[("dataset_id", dataset_id)]
+        all_models, all_devices = _filter_by_dataset_id(
+            db=db,
+            dataset_id=dataset_id,
+            list_dataset_ids=[x.id for x in all_datasets],
+            list_models=all_models,
+            list_datasets=all_datasets,
         )
 
     # Device name filtering
-    if device_name is not None:
-        # Validate device name
-        assert device_name in [x.sys_name for x in all_devices], "Invalid device name"
-        related_runs = get_runs_with_sys_name(db=db, sys_name=device_name)
-
-        # Filter models and datasets
-        all_models = [model for model in all_models if model.id in {run.model_id for run in related_runs}]
-
-        if comparison_type == "accuracy":
-            all_datasets = [ds for ds in all_datasets if ds.id in {run.dataset_id for run in related_runs}]
-
-        # Get available kernel versions
-        kernel_versions = [x.kernel_version for x in all_devices]
+    all_models, all_datasets, kernel_versions = _filter_by_device_name(
+        db=db,
+        comparison_type=comparison_type,
+        device_name=device_name,
+        list_devices=all_devices,
+        list_datasets=all_datasets,
+        list_models=all_models,
+    )
 
     # Kernel version validation
-    if kernel_version_a is not None:
-        assert kernel_version_a in kernel_versions, "Invalid kernel version A"
-    if kernel_version_b is not None:
-        assert kernel_version_b in kernel_versions, "Invalid kernel version B"
+    _validate_kernel_versions(kernel_version_a, kernel_version_b, kernel_versions)
 
     # Generate table rows when all required parameters are provided
     required_params = [model_id, device_name, kernel_version_a, kernel_version_b]
@@ -122,6 +123,80 @@ def generate_comparison(
 
     # Render and return HTML content
     return template.render(template_context)
+
+
+def _filter_by_device_name(
+    db: Session,
+    comparison_type: Literal["accuracy", "latency"],
+    device_name: str,
+    list_devices: list[Device],
+    list_datasets: list[Dataset],
+    list_models: list[Model],
+) -> tuple[list[Model], list[Dataset], list[str]]:
+    if device_name is None:
+        return list_models, list_datasets, []
+    # Validate device name
+    if device_name not in [x.sys_name for x in list_devices]:
+        raise InvalidDeviceNameError
+
+    related_runs = get_runs_with_sys_name(db=db, sys_name=device_name)
+
+    # Filter models and datasets
+    list_models = [model for model in list_models if model.id in {run.model_id for run in related_runs}]
+
+    if comparison_type == "accuracy":
+        list_datasets = [ds for ds in list_datasets if ds.id in {run.dataset_id for run in related_runs}]
+
+    # Get available kernel versions
+    return list_models, list_datasets, [x.kernel_version for x in list_devices]
+
+
+def _filter_by_dataset_id(
+    db: Session, dataset_id: int, list_dataset_ids: list[int], list_devices: list[Device], list_models: list[Model]
+) -> tuple[list[Model], list[Device]]:
+    # Validate dataset ID
+    if dataset_id not in list_dataset_ids:
+        raise InvalidDatasetIdError
+
+    # Filter models and devices
+    list_models = _filter_by_related_runs(db=db, list_filtered=list_models, filter_pairs=[("dataset_id", dataset_id)])
+
+    list_devices = _filter_by_related_runs(db=db, list_filtered=list_devices, filter_pairs=[("dataset_id", dataset_id)])
+
+    return list_models, list_devices
+
+
+def _filter_by_model_id(
+    db: Session,
+    comparison_type: Literal["accuracy", "latency"],
+    model_id: int,
+    list_model_ids: list[int],
+    list_devices: list[Device],
+    list_datasets: list[Dataset],
+) -> tuple[list[Device], list[Dataset]]:
+    if model_id is None:
+        return list_devices, list_datasets
+
+    # Validate model ID
+    if model_id not in list_model_ids:
+        raise InvalidModelIdError
+
+    list_devices = _filter_by_related_runs(db=db, list_filtered=list_devices, filter_pairs=[("model_id", model_id)])
+
+    # Filter datasets for accuracy comparison
+    if comparison_type == "accuracy":
+        list_datasets = _filter_by_related_runs(
+            db=db, list_filtered=list_datasets, filter_pairs=[("model_id", model_id)]
+        )
+
+    return list_devices, list_datasets
+
+
+def _validate_kernel_versions(version_a: str | None, version_b: str | None, list_versions: list[str]) -> None:
+    if version_a is not None and version_a not in list_versions:
+        raise InvalidKernelError
+    if version_b is not None and version_b not in list_versions:
+        raise InvalidKernelError
 
 
 def _sort_by_platform(objects: list[Model | Dataset]) -> dict[str, list[Model | Dataset]]:

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import kagglehub
-from configurationHandler.schemas import Dataset, Model, SupportedModelFrameworks, SupportedModelHubs
+from configurationHandler.schemas import Dataset, Model, SupportedModelFrameworks, SupportedModelHub
 from datasets import Dataset as HuggingFaceDataset
 from datasets import DatasetDict as HuggingFaceDatasetDict
 from datasets import concatenate_datasets as huggingface_concatenate_datasets
@@ -10,66 +10,101 @@ from huggingface_hub import hf_hub_download as huggingface_hub_download
 
 
 class DownloaderController:
-    def __init__(self, models: list[Model], datasets: list[Dataset]):
-        try:
-            # Sort models and dataset by platform:
-            models_by_hub: dict[SupportedModelHubs, Model] = self.sortByModelHub(models)
-            datasets_by_hub: dict[SupportedModelHubs, Dataset] = self.sortByModelHub(datasets)
+    """Controller for managing the download of models and datasets from supported model hubs like Hugging Face and Kaggle."""
 
-            # Create handlers for platforms:
-            self.handlerHf = HandlerHF(
-                models=models_by_hub[SupportedModelHubs.HUGGING_FACE],
-                datasets=datasets_by_hub[SupportedModelHubs.HUGGING_FACE],
-            )
-            self.handlerKaggle = HandlerKaggle(
-                models=models_by_hub[SupportedModelHubs.KAGGLE], datasets=datasets_by_hub[SupportedModelHubs.KAGGLE]
-            )
-        except Exception as ex:
-            raise ex
+    def __init__(self, models: list[Model], datasets: list[Dataset]) -> None:
+        """Initialize the DownloaderController by sorting models and datasets by platform and setting up platform-specific handlers.
 
-    def sortByModelHub(self, items: list[Model | Dataset]) -> dict[SupportedModelHubs, Model | Dataset]:
+        :param models: List of model instances to be downloaded.
+        :param datasets: List of dataset instances to be downloaded.
+        """
+        # Sort models and dataset by platform:
+        models_by_hub: dict[SupportedModelHub, Model] = self.sort_by_model_hub(models)
+        datasets_by_hub: dict[SupportedModelHub, Dataset] = self.sort_by_model_hub(datasets)
+
+        # Create handlers for platforms:
+        self.handlerHf = HandlerHF(
+            models=models_by_hub[SupportedModelHub.HUGGING_FACE],
+            datasets=datasets_by_hub[SupportedModelHub.HUGGING_FACE],
+        )
+        self.handlerKaggle = HandlerKaggle(
+            models=models_by_hub[SupportedModelHub.KAGGLE], datasets=datasets_by_hub[SupportedModelHub.KAGGLE]
+        )
+
+    def sort_by_model_hub(self, items: list[Model | Dataset]) -> dict[SupportedModelHub, Model | Dataset]:
+        """Group models or datasets by their associated platform.
+
+        :param items: List of model or dataset instances to group.
+        :return: Dictionary mapping each SupportedModelHub to its corresponding list of items.
+        """
         group = {}
-        for _, modelHub in SupportedModelHubs.__members__.items():
-            group[modelHub] = [x for x in items if x.platform == modelHub]
+        for _, model_hub in SupportedModelHub.__members__.items():
+            group[model_hub] = [x for x in items if x.platform == model_hub]
         return group
 
-    def download(self):
-        modelsHf, datasetsHf = self.handlerHf.download()
-        modelsKaggle, datasetsKaggle = self.handlerKaggle.download()
-        return [*modelsHf, *modelsKaggle], [*datasetsHf, *datasetsKaggle]
+    def download(self) -> tuple[list[Model], list[Dataset]]:
+        """Download models and datasets specified in configuration file.
+
+        :return: A tuple containing two lists: downloaded models and datasets.
+        """
+        models_hf, datasets_hf = self.handlerHf.download()
+        models_kaggle, datasets_kaggle = self.handlerKaggle.download()
+        return [*models_hf, *models_kaggle], [*datasets_hf, *datasets_kaggle]
 
 
 class DownloadHandler:
-    def __init__(self, models: list[Model], datasets: list[Dataset]):
+    """Base handler for downloading models and datasets.
+
+    This class is designed to be extended by specific platform handlers like
+    HandlerHF and HandlerKaggle, which assign concrete implementations to the
+    download functions.
+    """
+
+    def __init__(self, models: list[Model], datasets: list[Dataset]) -> None:
+        """Initialize the handler with lists of models and datasets.
+
+        :param models: List of model objects to download.
+        :param datasets: List of dataset objects to download.
+        """
         self.models = models
         self.datasets = datasets
-        self.downloadModelFunc = None
-        self.downloadDatasetFunc = None
+        self.download_model_func = None
+        self.download_dataset_func = None
 
     def download(self) -> tuple[list[Model], list[Dataset]]:
-        self.downloadModels()
-        self.downloadDatasets()
+        """Initiate download of both models and datasets."""
+        self.download_models()
+        self.download_datasets()
         return self.models, self.datasets
 
-    def downloadModels(self):
+    def download_models(self) -> None:
+        """Download models using the configured download function.
+
+        Sets `local_path` and `framework` on each model. If a model fails to download,
+        its `local_path` is set to None.
+        """
         for m in self.models:
             try:
-                m.localPath = Path(self.downloadModelFunc(m.uri))
-                m.framework = SupportedModelFrameworks(m.localPath.suffix.lstrip("."))
+                m.local_path = Path(self.download_model_func(m.uri))
+                m.framework = SupportedModelFrameworks(m.local_path.suffix.lstrip("."))
                 print(f"{m.name} loaded")
             except Exception:
-                m.localPath = None
+                m.local_path = None
                 print(f'Model "{m.name}" could not be loaded')
 
-    def downloadDatasets(self):
-        # If program would consume too much memory, load datasets right before using them
+    def download_datasets(self) -> None:
+        """Download datasets using the configured download function.
+
+        If a dataset is a DatasetDict, it will be merged into a single dataset.
+        The resulting dataset is stored in the `dataset` attribute.
+        """
         for d in self.datasets:
             try:
-                ds = self.downloadDatasetFunc(d.uri)
+                ds = self.download_dataset_func(d.uri)
                 if isinstance(ds, HuggingFaceDatasetDict):
                     ds = huggingface_concatenate_datasets(list(ds.values()))
                 if not isinstance(ds, HuggingFaceDataset):
-                    raise Exception
+                    raise TypeError
                 d.dataset = ds
                 print(f"{d.name} loaded")
             except Exception:
@@ -77,32 +112,40 @@ class DownloadHandler:
 
 
 class HandlerHF(DownloadHandler):
-    hubName = SupportedModelHubs.HUGGING_FACE
+    """Handler for downloading models and datasets from the Hugging Face."""
 
-    def __init__(self, models, datasets):
+    def __init__(self, models: list[Model], datasets: list[Dataset]) -> None:
+        """Initialize the Hugging Face handler and configure the download functions.
+
+        :param models: List of Hugging Face models.
+        :param datasets: List of Hugging Face datasets.
+        """
         super().__init__(models, datasets)
-        self.downloadModelFunc = lambda x: huggingface_hub_download(**self._parseModelUri(x))
-        self.downloadDatasetFunc = self._downloadDataset
+        self.download_model_func = lambda x: huggingface_hub_download(**self._parse_model_uri(x))
+        self.download_dataset_func = self._download_dataset
 
-    def _parseModelUri(self, uri: str) -> tuple[str, str, str]:
+    def _parse_model_uri(self, uri: str) -> tuple[str, str, str]:
         namespace, blob = uri.split("/blob/")
         revision, filename = blob.split("/")
         return {"repo_id": namespace, "filename": filename, "revision": revision}
 
-    def _downloadDataset(self, uri: str):
-        ds = huggingface_load_dataset(uri, trust_remote_code=True)
-        return ds
+    def _download_dataset(self, uri: str) -> HuggingFaceDataset | HuggingFaceDatasetDict:
+        return huggingface_load_dataset(uri, trust_remote_code=True)
 
 
 class HandlerKaggle(DownloadHandler):
-    hubName = SupportedModelHubs.KAGGLE
+    """Handler for downloading models and datasets from Kaggle."""
 
-    def __init__(self, models: list[Model], datasets: list[Dataset]):
+    def __init__(self, models: list[Model], datasets: list[Dataset]) -> None:
+        """Initialize the Kaggle handler and configure the download functions.
+
+        :param models: List of Kaggle models.
+        :param datasets: List of Kaggle datasets.
+        """
         super().__init__(models, datasets)
-        self.downloadModelFunc = lambda x: [f for f in Path(kagglehub.model_download(x)).iterdir()][0]
-        self.downloadDatasetFunc = self._downloadDataset
+        self.download_model_func = lambda x: next(iter(Path(kagglehub.model_download(x)).iterdir()))
+        self.download_dataset_func = self._download_dataset
 
-    def _downloadDataset(self, uri: str) -> HuggingFaceDataset | HuggingFaceDatasetDict:
-        localPath = kagglehub.dataset_download(uri)
-        ds = huggingface_load_dataset(localPath)
-        return ds
+    def _download_dataset(self, uri: str) -> HuggingFaceDataset | HuggingFaceDatasetDict:
+        local_path = kagglehub.dataset_download(uri)
+        return huggingface_load_dataset(local_path)

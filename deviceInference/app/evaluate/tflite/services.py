@@ -95,8 +95,8 @@ def _fetch_latency_executable(url: str, executable_path: Path) -> None:
     """
     import urllib.request
 
-    try:
-        urllib.request.urlretrieve(url, executable_path)
-        executable_path.chmod(0o755)
-    except Exception as e:
-        raise TFLiteLatencyExecutableDownloadError(url=url) from e
+    if not url.startswith(("http:", "https:")):
+        error_message = "URL must start with 'http:' or 'https:'"
+        raise ValueError(error_message)
+    urllib.request.urlretrieve(url, executable_path)
+    executable_path.chmod(0o755)

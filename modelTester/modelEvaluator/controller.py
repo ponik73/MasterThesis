@@ -3,14 +3,21 @@ from pathlib import Path
 
 from configuration import get_settings
 from configurationHandler.schemas import Dataset, Device, Model, Run
-
 from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.api.report.interface import ReportInterface
+from modelEvaluator.exceptions import DeviceApiError
 from modelEvaluator.pipeline import RunPipeline
 
 
 class EvaluatorController:
-    def __init__(self, devices: list[Device], runs: list[Run]):
+    """Controller for evaluation pipeline - from device discovery to final reporting."""
+
+    def __init__(self, devices: list[Device], runs: list[Run]) -> None:
+        """Initialize the EvaluatorController.
+
+        :param devices: List of available devices to run evaluations on.
+        :param runs: List of run configurations (device, model, dataset).
+        """
         self.models: list[Model] = []
         self.datasets: list[Dataset] = []
         self.runs = runs
@@ -32,58 +39,70 @@ class EvaluatorController:
                 self.deviceInteraces.append(interface)
 
                 print(f"Device `{dev.name}` at `{dev.uri}` was discovered.")
-            except Exception as e:
+            except DeviceApiError as e:
                 print(f"Unable to discover `{dev.name}` at `{dev.uri}`. Reason: {e}")
 
-    def setModels(self, models: list[Model]):
-        # Remove models where localPath is None (not downloaded):
-        self.models = [x for x in models if x.localPath]
+    def set_models(self, models: list[Model]) -> None:
+        """Set the list of models to be evaluated.
 
-    def setDatasets(self, datasets: list[Dataset]):
+        Only models with valid `local_path` will be used.
+        """
+        # Remove models where local_path is None (not downloaded):
+        self.models = [x for x in models if x.local_path]
+
+    def set_datasets(self, datasets: list[Dataset]) -> None:
+        """Set the list of datasets to be used for evaluation.
+
+        Only datasets with a loaded `dataset` attribute will be used.
+        """
         # Remove datasets where dataset is None (not downloaded):
         self.datasets = [x for x in datasets if x.dataset]
 
-    def createPipelines(self):
+    def create_pipelines(self) -> None:
+        """Create evaluation pipelines for each valid run configuration."""
         # Names of available devices, models, and datasets:
-        namesDevices = {device.name for device in self.devices}
-        namesModels = {model.name for model in self.models}
-        namesDatasets = {dataset.name for dataset in self.datasets}
+        names_devices = {device.name for device in self.devices}
+        names_models = {model.name for model in self.models}
+        names_datasets = {dataset.name for dataset in self.datasets}
         # Filter runs based on available models/datasets:
         self.runs = [
             run
             for run in self.runs
-            if run.deviceName in namesDevices and run.modelName in namesModels and run.datasetName in namesDatasets
+            if run.device_name in names_devices
+            and run.model_name in names_models
+            and run.dataset_name in names_datasets
         ]
 
         # Group runs by device:
-        runsByDevice = defaultdict(list)
+        runs_by_device = defaultdict(list)
         for run in self.runs:
-            runsByDevice[run.deviceName].append(run)
-        runsByDevice: dict[str, list[Run]] = dict(runsByDevice)
+            runs_by_device[run.device_name].append(run)
+        runs_by_device: dict[str, list[Run]] = dict(runs_by_device)
 
         # Create pipeline for each device:
-        for deviceName in runsByDevice.keys():
+        for device_name in runs_by_device:
             # Interface for a given device:
-            interface = [x for x in self.deviceInteraces if x.device.name == deviceName][0]
+            interface = next([x for x in self.deviceInteraces if x.device.name == device_name])
 
             # Run for a device is defined by model and dataset:
-            runSettings: list[tuple[Model, Dataset, dict[str, str]]] = []
+            run_settings: list[tuple[Model, Dataset, dict[str, str]]] = []
             # Create pairs of models and datasets:
-            for run in runsByDevice[deviceName]:
-                model = [x for x in self.models if x.name == run.modelName][0]
-                dataset = [x for x in self.datasets if x.name == run.datasetName][0]
-                runSettings.append((model, dataset, run.required_script_paths))
+            for run in runs_by_device[device_name]:
+                model = next([x for x in self.models if x.name == run.model_name])
+                dataset = next([x for x in self.datasets if x.name == run.dataset_name])
+                run_settings.append((model, dataset, run.required_script_paths))
             # Order pairs by model name:
-            runSettings = sorted(runSettings, key=lambda setting: setting[0].name)
+            run_settings = sorted(run_settings, key=lambda setting: setting[0].name)
 
-            self.pipelines.append(RunPipeline(deviceInterface=interface, runSettings=runSettings))
+            self.pipelines.append(RunPipeline(device_interface=interface, run_settings=run_settings))
 
-    def executePipelines(self):
+    def execute_pipelines(self) -> None:
+        """Execute all evaluation pipelines and registers their results."""
         for pipeline in self.pipelines:
             self._execute_pipeline(pipeline)
 
-    def _execute_pipeline(self, pipeline: RunPipeline):
-        device = pipeline.deviceInterface.device
+    def _execute_pipeline(self, pipeline: RunPipeline) -> None:
+        device = pipeline.device_interface.device
         while not pipeline.empty():
             model, dataset, metrics = pipeline.execute_run()
             run_id = self.reportInterface.register_run(device=device, model=model, dataset=dataset, metrics=metrics)
@@ -91,6 +110,7 @@ class EvaluatorController:
                 self.run_ids.append(run_id)
 
     def get_report(self) -> Path | None:
+        """Generate report for the experiment."""
         report = self.reportInterface.generate_report(self.run_ids)
 
         if report:
@@ -100,7 +120,7 @@ class EvaluatorController:
             file_name = f"report-{'-'.join([str(x) for x in self.run_ids])}.html"
             report_path = report_path_dir / file_name
 
-            with open(report_path, "w+") as f:
+            with Path(report_path).open("w+") as f:
                 f.write(report)
 
             return report_path

@@ -26,9 +26,9 @@
     ],
     "runs": [
         {
-            "deviceName": "localhost",
-            "modelName": "deeplabv3",
-            "datasetName": "pascal_voc_2012_semantic_segmentation",
+            "device_name": "localhost",
+            "model_name": "deeplabv3",
+            "dataset_name": "pascal_voc_2012_semantic_segmentation",
             "required_script_paths": {
                 "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/deeplab_segmentation.py"
             }

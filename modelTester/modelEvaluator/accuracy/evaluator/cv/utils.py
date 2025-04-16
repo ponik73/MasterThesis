@@ -5,7 +5,7 @@ from multiprocess.pool import Pool
 from PIL import Image
 
 
-def resizeImages(dataset: hfDataset, columns: dict[str, tuple[tuple[int, int], Literal["RGB"]]]):
+def resize_images(dataset: hfDataset, columns: dict[str, tuple[tuple[int, int], Literal["RGB"]]]) -> hfDataset:
     def transformsWrapper(key: str, targetSize: tuple[int, int], mode: str):
         def transforms(item):
             image: Image.Image = item[key]
@@ -22,33 +22,7 @@ def resizeImages(dataset: hfDataset, columns: dict[str, tuple[tuple[int, int], L
     return transformedDataset
 
 
-def resize_images_and_bboxes(dataset: hfDataset, columns: dict[str, tuple[tuple[int, int], Literal["RGB"]]]):
-    def transformsWrapper(imgKey: str, bboxKey: str, targetSize: tuple[int, int], mode: str):
-        def transforms(item):
-            image: Image.Image = item[imgKey]
-            W_orig, H_orig = image.size
-            item[imgKey] = image.convert(mode).resize(targetSize, resample=Image.Resampling.LANCZOS)
-
-            item["objects"]["bbox"] = resize_bboxes(
-                item["objects"]["bbox"], (W_orig, H_orig), targetSize
-            )  # TODO: key?????
-            return item
-
-        return transforms
-
-    transformedDataset = dataset
-    for columnName, (targetSize, mode) in columns.items():
-        transformFunc = transformsWrapper(
-            imgKey=columnName,
-            bboxKey="",  # TODO
-            targetSize=targetSize,
-            mode=mode,
-        )
-        transformedDataset = transformedDataset.map(transformFunc, num_proc=Pool()._processes)
-    return transformedDataset
-
-
-def resize_bboxes(bboxes: list[list[float]], orig_size: tuple[int, int], new_size: tuple[int, int]):
+def resize_bboxes(bboxes: list[list[float]], orig_size: tuple[int, int], new_size: tuple[int, int]) -> hfDataset:
     W_orig, H_orig = orig_size
     W_new, H_new = new_size
 

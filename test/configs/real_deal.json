@@ -33,14 +33,14 @@
     ],
     "runs": [
         {
-            "deviceName": "localhost",
-            "modelName": "mobilenetv1",
-            "datasetName": "mini_imagenet_classification"
+            "device_name": "localhost",
+            "model_name": "mobilenetv1",
+            "dataset_name": "mini_imagenet_classification"
         },
         {
-            "deviceName": "localhost",
-            "modelName": "deeplabv3",
-            "datasetName": "pascal_voc_2012_semantic_segmentation"
+            "device_name": "localhost",
+            "model_name": "deeplabv3",
+            "dataset_name": "pascal_voc_2012_semantic_segmentation"
         }
     ]
 }

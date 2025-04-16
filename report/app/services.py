@@ -4,7 +4,6 @@ from itertools import groupby
 from database.enumerated import MetricCategory
 from database.models import Dataset, DatasetBase, Device, DeviceBase, Metric, MetricBase, Model, ModelBase, Run
 from database.services import get_multiple_by_ids, get_or_create_record, insert_multiple_into_db, insert_single_into_db
-from fastapi import HTTPException
 from jinja2.environment import Template
 from sqlmodel import Session
 
@@ -12,46 +11,43 @@ from sqlmodel import Session
 def register_run_service(
     device: DeviceBase,
     model: ModelBase,
-    latency_metrics: list[MetricBase],
+    metrics: tuple[list[MetricBase], list[MetricBase]],
     dataset: DatasetBase,
-    accuracy_metrics: list[MetricBase],
     db: Session,
 ) -> int:
     """Register a new run, creating dependencies if necessary."""
-    try:
-        # Get device id by fingerprint; create if not exists:
-        device_db_object: Device = get_or_create_record(object_data=device, db_object_class=Device, db=db)
-        # Get model id by resource; create if not exists:
-        model_db_object: Model = get_or_create_record(object_data=model, db_object_class=Model, db=db)
-        # Get dataset id by resource; create if not exists:
-        dataset_db_object: Dataset = get_or_create_record(object_data=dataset, db_object_class=Dataset, db=db)
+    latency_metrics, accuracy_metrics = metrics
 
-        # Create record of the run:
-        run_db_object: Run = insert_single_into_db(
-            db_object=Run(device_id=device_db_object.id, model_id=model_db_object.id, dataset_id=dataset_db_object.id),
-            db=db,
-        )
+    # Get device id by fingerprint; create if not exists:
+    device_db_object: Device = get_or_create_record(object_data=device, db_object_class=Device, db=db)
+    # Get model id by resource; create if not exists:
+    model_db_object: Model = get_or_create_record(object_data=model, db_object_class=Model, db=db)
+    # Get dataset id by resource; create if not exists:
+    dataset_db_object: Dataset = get_or_create_record(object_data=dataset, db_object_class=Dataset, db=db)
 
-        # Create record for each metric:
-        insert_multiple_into_db(
-            db=db,
-            db_object=[
-                Metric(name=metric.name, value=metric.value, run_id=run_db_object.id, category="latency")
-                for metric in latency_metrics
-            ],
-        )
-        insert_multiple_into_db(
-            db=db,
-            db_object=[
-                Metric(name=metric.name, value=metric.value, run_id=run_db_object.id, category="accuracy")
-                for metric in accuracy_metrics
-            ],
-        )
+    # Create record of the run:
+    run_db_object: Run = insert_single_into_db(
+        db_object=Run(device_id=device_db_object.id, model_id=model_db_object.id, dataset_id=dataset_db_object.id),
+        db=db,
+    )
 
-        return run_db_object.id
+    # Create record for each metric:
+    insert_multiple_into_db(
+        db=db,
+        db_object=[
+            Metric(name=metric.name, value=metric.value, run_id=run_db_object.id, category="latency")
+            for metric in latency_metrics
+        ],
+    )
+    insert_multiple_into_db(
+        db=db,
+        db_object=[
+            Metric(name=metric.name, value=metric.value, run_id=run_db_object.id, category="accuracy")
+            for metric in accuracy_metrics
+        ],
+    )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"{e}")
+    return run_db_object.id
 
 
 def generate_report_service(run_ids: list[int], db: Session, template: Template) -> str:

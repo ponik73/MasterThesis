@@ -8,11 +8,14 @@ from pydantic_settings import BaseSettings
 
 
 class DockerHubPath(BaseModel):
+    """Image source on Docker Hub."""
+
     username: str
     image: str
     version: Literal["latest"]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return string representation of a source on Docker Hub."""
         return f"{self.username}/{self.image}:{self.version}"
 
 

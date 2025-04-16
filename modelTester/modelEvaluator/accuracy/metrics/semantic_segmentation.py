@@ -1,11 +1,13 @@
 from typing import Literal
 
-from torchmetrics.segmentation import DiceScore, HausdorffDistance, MeanIoU
+from torchmetrics.segmentation import DiceScore, MeanIoU
 
 from .metric import Metric
 
 
 class MeanIntersectionOverUnion(Metric):
+    """Mean intersection over union segmentation metric."""
+
     def __init__(self, num_classes: int, input_format: Literal["one-hot", "index"]) -> None:
         """Metric constructor."""
         self.torch_metric = MeanIoU(num_classes=num_classes, input_format=input_format)
@@ -16,6 +18,8 @@ class MeanIntersectionOverUnion(Metric):
 
 
 class DiceScoreMicro(Metric):
+    """Micro dice score segmentation metric."""
+
     def __init__(self, num_classes: int, input_format: Literal["one-hot", "index"]) -> None:
         """Metric constructor."""
         super().__init__()
@@ -27,6 +31,8 @@ class DiceScoreMicro(Metric):
 
 
 class DiceScoreMacro(Metric):
+    """Macro dice score segmentation metric."""
+
     def __init__(self, num_classes: int, input_format: Literal["one-hot", "index"]) -> None:
         """Metric constructor."""
         super().__init__()
@@ -35,16 +41,3 @@ class DiceScoreMacro(Metric):
     def name(self) -> str:
         """Get the name of a metric."""
         return "dice-score-macro"
-
-
-class HausdorffDistanceEuclidean(Metric):
-    def __init__(self, num_classes: int, input_format: Literal["one-hot", "index"]) -> None:
-        """Metric constructor."""
-        super().__init__()
-        self.torch_metric = HausdorffDistance(
-            num_classes=num_classes, input_format=input_format, distance_metric="euclidean"
-        )
-
-    def name(self) -> str:
-        """Get the name of a metric."""
-        return "hausdorff-distance-euclidean"
