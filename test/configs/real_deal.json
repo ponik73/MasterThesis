@@ -1,7 +1,7 @@
 {
     "devices": [
         {
-            "uri": "http://localhost:8000",
+            "uri": "localhost",
             "name": "localhost"
         }
     ],
@@ -17,30 +17,68 @@
             "task": "semantic-segmentation",
             "platform": "kaggle",
             "uri": "tensorflow/deeplabv3/tfLite/default"
+        },
+        {
+            "name": "yolov8",
+            "task": "object-detection",
+            "platform": "hf",
+            "uri": "jakubkasem/nicemodel/blob/main/yolov8m_full_integer_quant.tflite"
         }
     ],
     "datasets": [
         {
             "name": "mini_imagenet_classification",
             "platform": "kaggle",
-            "uri": "deeptrial/miniimagenet"
+            "uri": "deeptrial/miniimagenet",
+            "dataset_keys": {
+                "input": ["image"],
+                "target": ["label"]
+            }
         },
         {
             "name": "pascal_voc_2012_semantic_segmentation",
             "platform": "hf",
-            "uri": "jakubkasem/pascal_voc_2012"
+            "uri": "jakubkasem/pascal_voc_2012",
+            "dataset_keys": {
+                "input": ["image"],
+                "target": ["annotation"]
+            }
+        },
+        {
+            "name": "coco2017",
+            "platform": "hf",
+            "uri": "jakubkasem/coco2017",
+            "dataset_keys": {
+                "input": ["image"],
+                "bbox": ["objects", "bbox"],
+                "categories": ["objects", "categories"]
+            }
         }
     ],
     "runs": [
         {
             "device_name": "localhost",
             "model_name": "mobilenetv1",
-            "dataset_name": "mini_imagenet_classification"
+            "dataset_name": "mini_imagenet_classification",
+            "required_script_paths": {
+                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/mobilenetv1_mini_imagenet_classification.py"
+            }
         },
         {
             "device_name": "localhost",
             "model_name": "deeplabv3",
-            "dataset_name": "pascal_voc_2012_semantic_segmentation"
+            "dataset_name": "pascal_voc_2012_semantic_segmentation",
+            "required_script_paths": {
+                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/deeplab_segmentation.py"
+            }
+        },
+        {
+            "device_name": "localhost",
+            "model_name": "yolov8",
+            "dataset_name": "coco2017",
+            "required_script_paths": {
+                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/yolo_detection.py"
+            }
         }
     ]
 }

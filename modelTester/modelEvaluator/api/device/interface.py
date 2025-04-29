@@ -48,7 +48,6 @@ class DeviceInterface:
 
         :return: Estabilished ssh communication channel between PC and remote device.
         """
-        # try:
         return await asyncssh.connect(
             self.device.uri,
             username=self.device.credentials.user_name,
@@ -118,6 +117,10 @@ class DeviceInterface:
         settings = get_settings()
         port: int | None = None
 
+        self.url = Url.build(scheme="http", host=self.device.uri, port=8000)
+
+        return
+
         async with await self._create_ssh_connection() as conn:
             port = await self._check_for_docker_container(conn=conn, image=settings.DOCKER_DEVICE_API_PATH)
             if port is None:
@@ -159,12 +162,12 @@ class DeviceInterface:
                         # 'Content-Type': 'multipart/form-data',
                     },
                     "files": {
-                        "customName": (None, model_custom_name),
-                        "modelFile": model_file,
+                        "custom_name": (None, model_custom_name),
+                        "model_file": model_file,
                     },
                 }
 
-            upload_model_call(url=self.url, **call_args)
+                upload_model_call(url=self.url, **call_args)
         except ModelUploadError:
             print(f"Unable to upload model `{model_custom_name}` to device: `{self.name}` at `{self.url}`.")
             return False

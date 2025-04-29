@@ -60,7 +60,7 @@ class Dataset(BaseModel):
     name: str
     platform: SupportedModelHub
     uri: str
-    dataset_keys: dict[str, str]
+    dataset_keys: dict[str, list[str]]
     dataset: HuggingFaceDataset | None = None
 
     class Config:

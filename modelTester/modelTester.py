@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 from configuration import get_settings
-from configurationHandler.cfg_parser import ConfigParser
+from configurationHandler.cfgParser import ConfigParser
 from downloader.controller import DownloaderController
 from modelEvaluator.controller import EvaluatorController
 

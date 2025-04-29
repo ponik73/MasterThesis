@@ -5,12 +5,12 @@ import torch
 from configurationHandler.schemas import Dataset, Model
 from modelEvaluator.accuracy.metrics.metric import MetricResult
 from modelEvaluator.api.device.interface import DeviceInterface
-from modelEvaluator.api.utils import decodeData, encodeData
+from modelEvaluator.api.utils import decode_data, encode_data
 from modelEvaluator.exceptions import OndeviceInferenceError
 from torch.utils.data import DataLoader
 
 from ..accuracyEvaluator import AccuracyEvaluator
-from .utils import nested_read, resize_bboxes, resizeImages
+from .utils import nested_read, resize_bboxes, resize_images
 
 
 class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
@@ -33,8 +33,10 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
         super().__init__(model, device_interface, dataset, required_script_paths)
 
         self.imageKey = dataset.dataset_keys.get("input", None)
-        self.bbox_key = ["objects", "bbox"]  # TODO: modify config (all the keys will be lists/tuples)
-        self.categoriesKey = ["objects", "categories"]  # TODO modify config (all the keys will be lists/tuples)
+        self.bbox_key = dataset.dataset_keys.get("bbox", None)
+        self.categoriesKey = dataset.dataset_keys.get("categories", None)
+        # self.bbox_key = ["objects", "bbox"]  # TODO: modify config (all the keys will be lists/tuples)
+        # self.categoriesKey = ["objects", "categories"]  # TODO modify config (all the keys will be lists/tuples)
 
     def evaluate(self) -> list[MetricResult]:
         """Execute the object detection inference and metric evaluation."""
@@ -47,17 +49,19 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
         )
 
         # Resize images:
-        transformed_dataset = resizeImages(dataset=transformed_dataset, columns={self.imageKey: (target_size, "RGB")})
+        transformed_dataset = resize_images(dataset=transformed_dataset, columns=[(self.imageKey, (target_size, "RGB"))])
 
         # Create data loader and batches:
         input_dtype: str = self.modelInputs[0]["dtype"]
 
         def _collate_fn(batch) -> tuple[np.typing.NDArray[Any], list, list]:
             if np.issubdtype(input_dtype, np.integer):
-                images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                # images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                images = np.array([nested_read(x, self.imageKey) for x in batch]).astype(input_dtype)
             elif np.issubdtype(input_dtype, np.floating):
-                images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(input_dtype)
-                images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                images = np.array([np.array(nested_read(x, self.imageKey)) / 255.0 for x in batch]).astype(input_dtype)
+                # images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(input_dtype)
+                # images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
             else:
                 error_message = "Model input data type is not supported."
                 raise TypeError(error_message)
@@ -77,15 +81,15 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
 
             # Inference:
             encoded_outputs = self.device_interface.predict(
-                modelCustomName=self.model.name,
-                modelFramework=self.model.framework,
-                encodedBatch=encodeData(mapping_input_data),
+                model_custom_name=self.model.name,
+                model_framework=self.model.framework,
+                encoded_batch=encode_data(mapping_input_data),
             )
             if not encoded_outputs:
                 raise OndeviceInferenceError(model_local_path=self.model.local_path, api_url=self.device_interface.url)
 
             # Decode inference result and append it to the predictions:
-            model_outputs: list[dict[int, np.typing.NDArray[Any]]] = np.array(decodeData(encoded_outputs))
+            model_outputs: list[dict[int, np.typing.NDArray[Any]]] = np.array(decode_data(encoded_outputs))
 
             predictions, targets, box_format = self.align_function.call(
                 predictions=model_outputs, targets=(bboxes, categories)
@@ -113,5 +117,6 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
                 self.init_metrics(box_format=box_format)
 
             self.update_metrics(_predictions, _targets)
+            break
 
         return self.compute_metrics()

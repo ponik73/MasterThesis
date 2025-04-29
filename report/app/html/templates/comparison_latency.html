@@ -209,10 +209,10 @@
             <tbody>
                 {% for (name, unit), value_a, value_b, diff in table_rows %}
                 <tr>
-                    <td>{{name}} { % if unit is not none % }({{unit}}){ % endif % }</td>
+                    <td>{{name}} {% if unit is not none %}({{unit}}){% endif %}</td>
                     <td>{{value_a}}</td>
                     <td>{{value_b}}</td>
-                    <td class="comparison-highlight-{% if diff < 0 %}green{% else %}red{% endif %}">{{diff}}</td>
+                    <td>{{diff}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

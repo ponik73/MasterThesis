@@ -10,7 +10,7 @@ from modelEvaluator.exceptions import OndeviceInferenceError
 from torch.utils.data import DataLoader
 
 from ..accuracyEvaluator import AccuracyEvaluator
-from .utils import resize_images
+from .utils import resize_images, nested_read
 
 
 class ClassificationAccuracyEvaluator(AccuracyEvaluator):
@@ -30,7 +30,7 @@ class ClassificationAccuracyEvaluator(AccuracyEvaluator):
         # Resize images
         input_shape: list[int] = self.modelInputs[0]["shape"]
         target_size = (input_shape[1], input_shape[2])
-        transformed_dataset = resize_images(dataset=self.dataset.dataset, columns={self.imageKey: (target_size, "RGB")})
+        transformed_dataset = resize_images(dataset=self.dataset.dataset, columns=[(self.imageKey, (target_size, "RGB"))])
 
         # Create data loader and batches:
         input_dtype: str = self.modelInputs[0]["dtype"]
@@ -39,16 +39,19 @@ class ClassificationAccuracyEvaluator(AccuracyEvaluator):
             # images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
 
             if np.issubdtype(input_dtype, np.integer):
-                images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                # images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                images = np.array([nested_read(x, self.imageKey) for x in batch]).astype(input_dtype)
             elif np.issubdtype(input_dtype, np.floating):
-                images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(input_dtype)
-                images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                images = np.array([np.array(nested_read(x, self.imageKey)) / 255.0 for x in batch]).astype(input_dtype)
+                # images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(input_dtype)
+                # images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
             else:
                 error_message = "Model input data type is not supported."
                 raise TypeError(error_message)
 
-            labels = np.array([x[self.labelKey] for x in batch])
-            return {self.imageKey: images, self.labelKey: labels}
+            # labels = np.array([x[self.labelKey] for x in batch])
+            labels = [nested_read(x, self.labelKey) for x in batch]
+            return images, labels
 
         dataloader = DataLoader(
             transformed_dataset, shuffle=True, batch_size=self.BATCH_SIZE, collate_fn=_collate_fn, drop_last=True
@@ -56,9 +59,7 @@ class ClassificationAccuracyEvaluator(AccuracyEvaluator):
 
         input_idx: int = self.modelInputs[0]["index"]
         # Inference for each batch:
-        for batch in dataloader:
-            images: np.typing.NDArray[Any] = batch[self.imageKey]
-            labels: np.typing.NDArray[Any] = batch[self.labelKey]
+        for images, labels in dataloader:
 
             mapping_input_data: list[dict[int, np.typing.NDArray[Any]]] = [{input_idx: x} for x in images]
 
@@ -79,5 +80,6 @@ class ClassificationAccuracyEvaluator(AccuracyEvaluator):
                 self.init_metrics(num_classes=num_classes)
 
             self.update_metrics(torch.tensor(predictions), torch.tensor(targets))
+            break
 
         return self.compute_metrics()

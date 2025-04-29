@@ -10,7 +10,7 @@ from modelEvaluator.exceptions import OndeviceInferenceError
 from torch.utils.data import DataLoader
 
 from ..accuracyEvaluator import AccuracyEvaluator
-from .utils import resize_images
+from .utils import resize_images, nested_read
 
 
 class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
@@ -42,10 +42,10 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
         target_size = (input_shape[1], input_shape[2])
         transformed_dataset = resize_images(
             dataset=self.dataset.dataset,
-            columns={
-                self.imageKey: (target_size, "RGB"),
-                self.annotationKey: (target_size, "P"),
-            },
+            columns=[
+                (self.imageKey, (target_size, "RGB")),
+                (self.annotationKey, (target_size, "P")),
+            ],
         )
 
         # Create data loader and batches:
@@ -53,16 +53,19 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
 
         def _collate_fn(batch) -> dict[str, np.typing.NDArray[Any]]:
             if np.issubdtype(input_dtype, np.integer):
-                images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                # images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
+                images = np.array([nested_read(x, self.imageKey) for x in batch]).astype(input_dtype)
             elif np.issubdtype(input_dtype, np.floating):
-                images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(input_dtype)
+                images = np.array([np.array(nested_read(x, self.imageKey)) / 255.0 for x in batch]).astype(input_dtype)
+                # images = np.array([np.array(x[self.imageKey]) / 255.0 for x in batch]).astype(input_dtype)
                 # images = np.array([x[self.imageKey] for x in batch]).astype(input_dtype)
             else:
                 error_message = "Model input data type is not supported."
                 raise TypeError(error_message)
 
-            annotations = np.array([x[self.annotationKey] for x in batch])
-            return {self.imageKey: images, self.annotationKey: annotations}
+            # annotations = np.array([x[self.annotationKey] for x in batch])
+            annotations = np.array([nested_read(x, self.annotationKey) for x in batch])
+            return images, annotations
 
         dataloader = DataLoader(
             transformed_dataset, shuffle=True, batch_size=self.BATCH_SIZE, collate_fn=_collate_fn, drop_last=True
@@ -70,10 +73,7 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
 
         input_idx: int = self.modelInputs[0]["index"]
         # Inference for each batch:
-        for batch in dataloader:
-            images: np.typing.NDArray[Any] = batch[self.imageKey]
-            annotations: np.typing.NDArray[Any] = batch[self.annotationKey]
-
+        for images, annotations in dataloader:
             mapping_input_data: list[dict[int, np.typing.NDArray[Any]]] = [{input_idx: x} for x in images]
             # Inference:
             encoded_outputs = self.device_interface.predict(

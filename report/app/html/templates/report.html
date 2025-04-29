@@ -255,7 +255,7 @@
                         <tbody>
                             {% for metric in run.accuracy_results %}
                             <tr>
-                                <td>{{ metric.name }} { % if metric.unit is not none % }({{metric.unit}}){ % endif % }</td>
+                                <td>{{ metric.name }} {% if metric.unit is not none %}({{metric.unit}}){% endif %}</td>
                                 <td>{{ metric.value }}</td>
                                 <!-- <td>ms</td> -->
                             </tr>

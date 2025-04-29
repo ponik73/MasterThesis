@@ -82,14 +82,14 @@ class EvaluatorController:
         # Create pipeline for each device:
         for device_name in runs_by_device:
             # Interface for a given device:
-            interface = next([x for x in self.deviceInteraces if x.device.name == device_name])
+            interface = next((x for x in self.deviceInteraces if x.device.name == device_name), None)
 
             # Run for a device is defined by model and dataset:
             run_settings: list[tuple[Model, Dataset, dict[str, str]]] = []
             # Create pairs of models and datasets:
             for run in runs_by_device[device_name]:
-                model = next([x for x in self.models if x.name == run.model_name])
-                dataset = next([x for x in self.datasets if x.name == run.dataset_name])
+                model = next((x for x in self.models if x.name == run.model_name), None)
+                dataset = next((x for x in self.datasets if x.name == run.dataset_name), None)
                 run_settings.append((model, dataset, run.required_script_paths))
             # Order pairs by model name:
             run_settings = sorted(run_settings, key=lambda setting: setting[0].name)

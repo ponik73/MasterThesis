@@ -44,7 +44,7 @@ def generate_comparison(
     )
 
     kernel_versions: list[str] = []
-    table_rows: list[tuple[tuple[str, str], str, str, float]] = []
+    table_rows: list[tuple[tuple[str, str | None], str, str, float]] = []
 
     # Model ID filtering:
     all_devices, all_datasets = _filter_by_model_id(
@@ -62,8 +62,8 @@ def generate_comparison(
             db=db,
             dataset_id=dataset_id,
             list_dataset_ids=[x.id for x in all_datasets],
+            list_devices=all_devices,
             list_models=all_models,
-            list_datasets=all_datasets,
         )
 
     # Device name filtering
@@ -243,7 +243,7 @@ def _get_table_rows(
     }
 
     # Get all unique metric names from both runs
-    table_rows: list[tuple[tuple[str, str], str, str, float]] = []
+    table_rows: list[tuple[tuple[str, str | None], str, str, float]] = []
 
     for metric_name, (unit, value_a) in metrics_a.items():
         _, value_b = metrics_b.get(metric_name)

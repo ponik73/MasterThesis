@@ -35,7 +35,7 @@ def register_run_service(
     insert_multiple_into_db(
         db=db,
         db_object=[
-            Metric(name=metric.name, value=metric.value, run_id=run_db_object.id, category="latency")
+            Metric(name=metric.name, value=metric.value, run_id=run_db_object.id, category="latency", unit=metric.unit)
             for metric in latency_metrics
         ],
     )

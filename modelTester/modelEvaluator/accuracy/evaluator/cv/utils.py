@@ -6,20 +6,21 @@ from multiprocess.pool import Pool
 from PIL import Image
 
 
-def resize_images(dataset: hfDataset, columns: dict[str, tuple[tuple[int, int], Literal["RGB"]]]) -> hfDataset:
+def resize_images(dataset: hfDataset, columns: list[tuple[list[str], tuple[tuple[int, int], Literal["RGB"]]]]) -> hfDataset:
     """Resize images in a Hugging Face dataset to specified dimensions and color modes."""
 
-    def transforms_wrapper(key: str, target_size: tuple[int, int], mode: str) -> Callable:
+    def transforms_wrapper(key: list[str], target_size: tuple[int, int], mode: str) -> Callable:
         def transforms(item):
-            image: Image.Image = item[key]
-            item[key] = image.convert(mode).resize(target_size, resample=Image.Resampling.LANCZOS)
-            # item[key] = image.resize(target_size, resample=Image.Resampling.LANCZOS)
+            image: Image.Image = nested_read(item, key)
+            resized = image.convert(mode).resize(target_size, resample=Image.Resampling.LANCZOS)
+            _nested_write(item, resized, key)
+            # item[key] = image.convert(mode).resize(target_size, resample=Image.Resampling.LANCZOS)
             return item
 
         return transforms
 
     transformed_dataset = dataset
-    for column_name, (target_size, mode) in columns.items():
+    for column_name, (target_size, mode) in columns:
         transform_func = transforms_wrapper(key=column_name, target_size=target_size, mode=mode)
         transformed_dataset = transformed_dataset.map(transform_func, num_proc=Pool()._processes)
     return transformed_dataset
@@ -52,7 +53,7 @@ def resize_bboxes(
     """Resize bounding boxes in a Hugging Face dataset to reflect new image dimensions."""
 
     def transforms(item):
-        image: Image.Image = item[img_key]
+        image: Image.Image = nested_read(item, img_key)
         w_orig, h_orig = image.width, image.height
         bboxes: list[list[float]] = nested_read(item, bbox_key)
         resized = _resize_bboxes(bboxes, (w_orig, h_orig), target_size)

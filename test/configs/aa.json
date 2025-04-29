@@ -19,8 +19,9 @@
             "platform": "hf",
             "uri": "jakubkasem/coco2017",
             "dataset_keys": {
-                "input": "image",
-                "target": "objects"
+                "input": ["image"],
+                "bbox": ["objects", "bbox"],
+                "categories": ["objects", "categories"]
             }
         }
     ],
