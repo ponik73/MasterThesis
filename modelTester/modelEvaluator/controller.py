@@ -108,6 +108,8 @@ class EvaluatorController:
             run_id = self.reportInterface.register_run(device=device, model=model, dataset=dataset, metrics=metrics)
             if run_id:
                 self.run_ids.append(run_id)
+        
+        pipeline.device_interface.shutdownApi()
 
     def get_report(self) -> Path | None:
         """Generate report for the experiment."""
