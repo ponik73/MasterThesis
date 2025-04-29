@@ -8,6 +8,7 @@ from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.api.utils import decode_data, encode_data
 from modelEvaluator.exceptions import OndeviceInferenceError
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from ..accuracyEvaluator import AccuracyEvaluator
 from .utils import resize_images, nested_read
@@ -37,6 +38,8 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
 
     def evaluate(self) -> list[MetricResult]:
         """Execute the semantic segmentation inference and metric evaluation."""
+        
+        print("\nTransforming dataset...")
         # Resize images
         input_shape: list[int] = self.modelInputs[0]["shape"]
         target_size = (input_shape[1], input_shape[2])
@@ -73,7 +76,7 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
 
         input_idx: int = self.modelInputs[0]["index"]
         # Inference for each batch:
-        for images, annotations in dataloader:
+        for images, annotations in tqdm(dataloader, desc="Evaluating accuracy"):
             mapping_input_data: list[dict[int, np.typing.NDArray[Any]]] = [{input_idx: x} for x in images]
             # Inference:
             encoded_outputs = self.device_interface.predict(
@@ -95,5 +98,5 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
 
             self.update_metrics(torch.tensor(predictions), torch.tensor(targets))
 
-            break
+            # break
         return self.compute_metrics()

@@ -8,6 +8,7 @@ from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.api.utils import decode_data, encode_data
 from modelEvaluator.exceptions import OndeviceInferenceError
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from ..accuracyEvaluator import AccuracyEvaluator
 from .utils import nested_read, resize_bboxes, resize_images
@@ -76,7 +77,7 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
         input_idx: int = self.modelInputs[0]["index"]
 
         # Inference for each batch:
-        for images, bboxes, categories in dataloader:
+        for images, bboxes, categories in tqdm(dataloader, desc="Evaluating accuracy"):
             mapping_input_data: list[dict[int, np.typing.NDArray[Any]]] = [{input_idx: x} for x in images]
 
             # Inference:
@@ -117,6 +118,6 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
                 self.init_metrics(box_format=box_format)
 
             self.update_metrics(_predictions, _targets)
-            break
+            # break
 
         return self.compute_metrics()

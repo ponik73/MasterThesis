@@ -1,5 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
+from tqdm import tqdm
 
 from configuration import get_settings
 from configurationHandler.schemas import Dataset, Device, Model, Run
@@ -7,6 +8,7 @@ from modelEvaluator.api.device.interface import DeviceInterface
 from modelEvaluator.api.report.interface import ReportInterface
 from modelEvaluator.exceptions import DeviceApiError
 from modelEvaluator.pipeline import RunPipeline
+from utils import print_success, print_failure
 
 
 class EvaluatorController:
@@ -38,9 +40,9 @@ class EvaluatorController:
                 self.devices.append(interface.device)
                 self.deviceInteraces.append(interface)
 
-                print(f"Device `{dev.name}` at `{dev.uri}` was discovered.")
+                print_success(f"Device `{dev.name}` at `{dev.uri}` was discovered.")
             except DeviceApiError as e:
-                print(f"Unable to discover `{dev.name}` at `{dev.uri}`. Reason: {e}")
+                print_failure(f"Unable to discover `{dev.name}` at `{dev.uri}`. Reason: {e}")
 
     def set_models(self, models: list[Model]) -> None:
         """Set the list of models to be evaluated.
@@ -98,7 +100,7 @@ class EvaluatorController:
 
     def execute_pipelines(self) -> None:
         """Execute all evaluation pipelines and registers their results."""
-        for pipeline in self.pipelines:
+        for pipeline in tqdm(self.pipelines, desc="Pipeline"):
             self._execute_pipeline(pipeline)
 
     def _execute_pipeline(self, pipeline: RunPipeline) -> None:

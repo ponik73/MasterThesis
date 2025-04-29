@@ -12,3 +12,4 @@ python-certifi-win32
 pydantic
 pydantic-core
 pydantic-settings
+tqdm

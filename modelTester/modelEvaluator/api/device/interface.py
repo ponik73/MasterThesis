@@ -188,7 +188,6 @@ class DeviceInterface:
 
                 upload_model_call(url=self.url, **call_args)
         except ModelUploadError:
-            print(f"Unable to upload model `{model_custom_name}` to device: `{self.name}` at `{self.url}`.")
             return False
         else:
             return True

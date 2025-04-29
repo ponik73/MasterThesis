@@ -8,6 +8,8 @@ from datasets import concatenate_datasets as huggingface_concatenate_datasets
 from datasets import load_dataset as huggingface_load_dataset
 from huggingface_hub import hf_hub_download as huggingface_hub_download
 
+from utils import print_success, print_failure
+
 
 class DownloaderController:
     """Controller for managing the download of models and datasets from supported model hubs like Hugging Face and Kaggle."""
@@ -87,10 +89,10 @@ class DownloadHandler:
             try:
                 m.local_path = Path(self.download_model_func(m.uri))
                 m.framework = SupportedModelFrameworks(m.local_path.suffix.lstrip("."))
-                print(f"{m.name} loaded")
+                print_success(f"{m.name} loaded")
             except Exception:
                 m.local_path = None
-                print(f'Model "{m.name}" could not be loaded')
+                print_failure(f'Model "{m.name}" could not be loaded')
 
     def download_datasets(self) -> None:
         """Download datasets using the configured download function.
@@ -106,9 +108,9 @@ class DownloadHandler:
                 if not isinstance(ds, HuggingFaceDataset):
                     raise TypeError
                 d.dataset = ds
-                print(f"{d.name} loaded")
+                print_success(f"{d.name} loaded")
             except Exception:
-                print(f'Dataset "{d.name}" could not be loaded')
+                print_failure(f'Dataset "{d.name}" could not be loaded')
 
 
 class HandlerHF(DownloadHandler):
