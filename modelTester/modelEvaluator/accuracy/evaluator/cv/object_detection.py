@@ -76,6 +76,7 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
         )
         input_idx: int = self.modelInputs[0]["index"]
 
+        TMP_ITERATION_COUNTER = 0
         # Inference for each batch:
         for images, bboxes, categories in tqdm(dataloader, desc="Evaluating accuracy"):
             mapping_input_data: list[dict[int, np.typing.NDArray[Any]]] = [{input_idx: x} for x in images]
@@ -118,6 +119,9 @@ class ObjectDetectionAccuracyEvaluator(AccuracyEvaluator):
                 self.init_metrics(box_format=box_format)
 
             self.update_metrics(_predictions, _targets)
-            # break
+
+            TMP_ITERATION_COUNTER += 1
+            if TMP_ITERATION_COUNTER > 5:
+                break
 
         return self.compute_metrics()

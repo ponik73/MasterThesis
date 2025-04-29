@@ -59,6 +59,8 @@ class ClassificationAccuracyEvaluator(AccuracyEvaluator):
         )
 
         input_idx: int = self.modelInputs[0]["index"]
+
+        TMP_ITERATION_COUNTER = 0
         # Inference for each batch:
         for images, labels in tqdm(dataloader, desc="Evaluating accuracy"):
 
@@ -81,6 +83,9 @@ class ClassificationAccuracyEvaluator(AccuracyEvaluator):
                 self.init_metrics(num_classes=num_classes)
 
             self.update_metrics(torch.tensor(predictions), torch.tensor(targets))
-            # break
+            
+            TMP_ITERATION_COUNTER += 1
+            if TMP_ITERATION_COUNTER > 5:
+                break
 
         return self.compute_metrics()

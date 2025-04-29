@@ -37,12 +37,10 @@ if __name__ == "__main__":
     # del cfg_parser
 
     # Model Evaluator - initialization:
-    # print("#" * 10 + "\n" + "DISCOVERING DEVICES\n" + "#" * 10 + "\n")
     print_top_level("DISCOVERING DEVICES")
     evaluator = EvaluatorController(devices, runs)
 
     # Download items from model hubs:
-    # print("#" * 10 + "\n" + "RETRIEVING DATA FROM MODEL HUBS\n" + "#" * 10 + "\n")
     print_top_level("RETRIEVING DATA FROM MODEL HUBS")
     downloader = DownloaderController(models, datasets)
     models, datasets = downloader.download()
@@ -50,12 +48,10 @@ if __name__ == "__main__":
     evaluator.set_models(models)
     evaluator.set_datasets(datasets)
 
-    # print("#" * 10 + "\n" + "EXECUTING RUNS\n" + "#" * 10 + "\n")
     print_top_level("EXECUTING RUNS")
     evaluator.create_pipelines()
     evaluator.execute_pipelines()
 
-    # print("#" * 10 + "\n" + "GENERATING REPORT\n" + "#" * 10 + "\n")
     print_top_level("GENERATING REPORT")
     report_path = evaluator.get_report()
 

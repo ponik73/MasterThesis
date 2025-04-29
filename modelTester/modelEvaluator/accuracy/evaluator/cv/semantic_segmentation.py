@@ -75,6 +75,8 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
         )
 
         input_idx: int = self.modelInputs[0]["index"]
+
+        TMP_ITERATION_COUNTER = 0
         # Inference for each batch:
         for images, annotations in tqdm(dataloader, desc="Evaluating accuracy"):
             mapping_input_data: list[dict[int, np.typing.NDArray[Any]]] = [{input_idx: x} for x in images]
@@ -98,5 +100,8 @@ class SemanticSegmentationAccuracyEvaluator(AccuracyEvaluator):
 
             self.update_metrics(torch.tensor(predictions), torch.tensor(targets))
 
-            # break
+            TMP_ITERATION_COUNTER += 1
+            if TMP_ITERATION_COUNTER > 5:
+                break
+
         return self.compute_metrics()
