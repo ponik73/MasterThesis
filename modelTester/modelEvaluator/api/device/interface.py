@@ -24,6 +24,7 @@ from modelEvaluator.api.device.calls import (
     upload_model_call,
 )
 from modelEvaluator.exceptions import (
+    DeviceApiError,
     DeviceApiInitError,
     FrameworkNotSupportedError,
     ModelUploadError,
@@ -82,8 +83,9 @@ class DeviceInterface:
 
         return default_port
 
-    async def _check_for_docker_container(self, conn: asyncssh.SSHClientConnection, image: DockerHubPath) -> int | None:
+    async def _check_for_docker_container(self, conn: asyncssh.SSHClientConnection, image: DockerHubPath) -> tuple[str | None, int | None]:
         port: int | None = None
+        container_id: str | None = None
 
         result = await conn.run(f'docker container ls --filter=ancestor={image} --format "{{{{.ID}}}}\n{{{{.Ports}}}}"')
         if result.exit_status != 0:
@@ -95,7 +97,9 @@ class DeviceInterface:
             if port_match is not None:
                 port = int(port_match.group("port"))
 
-        return port
+            container_id = lines[0].strip()
+        
+        return container_id, port
 
     async def _pull_and_run_docker(self, conn: asyncssh.SSHClientConnection, image: DockerHubPath) -> int:
         result = await conn.run(f"docker pull {image}")
@@ -112,17 +116,32 @@ class DeviceInterface:
             raise DeviceApiInitError(error_message)
 
         return port
+    
+    async def _stop_docker_container(self) -> None:
+        settings = get_settings()
+
+        async with await self._create_ssh_connection() as conn:
+            # Get container ID:
+            container_id, _ = await self._check_for_docker_container(conn=conn, image=settings.DOCKER_DEVICE_API_PATH)
+
+            if container_id:
+                # Call docker container stop command:
+                result = await conn.run(f'docker container stop {container_id}')
+                if result.exit_status != 0:
+                    error_message = "Unable to stop the device API container."
+                    raise DeviceApiError(error_message)
+
 
     async def _initialize_api(self) -> None:
         settings = get_settings()
         port: int | None = None
 
-        self.url = Url.build(scheme="http", host=self.device.uri, port=8000)
+        # self.url = Url.build(scheme="http", host=self.device.uri, port=8000)
 
-        return
+        # return
 
         async with await self._create_ssh_connection() as conn:
-            port = await self._check_for_docker_container(conn=conn, image=settings.DOCKER_DEVICE_API_PATH)
+            _, port = await self._check_for_docker_container(conn=conn, image=settings.DOCKER_DEVICE_API_PATH)
             if port is None:
                 port = await self._pull_and_run_docker(conn=conn, image=settings.DOCKER_DEVICE_API_PATH)
 
@@ -169,7 +188,6 @@ class DeviceInterface:
 
                 upload_model_call(url=self.url, **call_args)
         except ModelUploadError:
-            print(f"Unable to upload model `{model_custom_name}` to device: `{self.name}` at `{self.url}`.")
             return False
         else:
             return True
@@ -219,3 +237,7 @@ class DeviceInterface:
         if model_framework == "tflite":
             return predict_tflite_call(url=self.url, **call_args)
         raise FrameworkNotSupportedError(model_framework)
+    
+    def shutdownApi(self) -> None:
+        """Shutdown Device API (intended to use at the end of the evaluation pipeline)."""
+        asyncio.get_event_loop().run_until_complete(self._stop_docker_container())

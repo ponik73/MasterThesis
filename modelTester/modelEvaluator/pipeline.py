@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 from modelEvaluator.accuracy.evaluator.accuracyEvaluatorFactory import accuracy_evaluator_factory
 from modelEvaluator.exceptions import ModelUploadError
 from modelEvaluator.latency.parserFactory import latency_parser_factory
+from utils import print_success, print_failure
 
 
 class RunPipeline:
@@ -46,16 +47,20 @@ class RunPipeline:
     ) -> tuple[list[MetricResult], list[MetricResult]]:
         # Runs are ordered by models. Upload the next model:
         if model.name != self.currentModelName:
+            print("\nUploading model...")
             self.currentModelName = model.name
             uploaded = self.device_interface.upload_model(model.local_path, model.name)
             if not uploaded:
                 raise ModelUploadError(model_local_path=model.local_path, api_url=self.device_interface.device.uri)
+        print_success("\nModel uploaded")
 
+        print("\nEvaluating latency...")
         # Evaluate latency on device:
         latency_raw_output = self.device_interface.evaluate_latency(model.name, model.framework)
         # Parse the output:
         parser = latency_parser_factory(model.framework)
         latency_results = parser.parse(latency_raw_output)
+        print_success("\nLatency evaluated")
 
         # Evaluate accuracy on device:
         accuracy_evaluator = accuracy_evaluator_factory(model.task)(

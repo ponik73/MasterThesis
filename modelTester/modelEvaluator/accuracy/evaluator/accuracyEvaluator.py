@@ -14,7 +14,7 @@ from user_script.scripts.align_target_predicted import AlignTargetPredictedFunct
 class AccuracyEvaluator(ABC):
     """Abstract base class for accuracy evaluators."""
 
-    BATCH_SIZE = 64
+    BATCH_SIZE = 32
 
     def __init__(
         self, model: Model, device_interface: DeviceInterface, dataset: Dataset, required_script_paths: dict[str, str]

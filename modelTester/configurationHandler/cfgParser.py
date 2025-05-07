@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from .schemas import Config, Dataset, Device, Model, Run  # , DownloaderConfiguration
+from utils import print_failure
 
 
 class ConfigParser:
@@ -44,7 +45,7 @@ class ConfigParser:
             valid, ref = valid_run(r)
             if not valid:
                 self.cfg.runs.remove(r)
-                print(f"Run {vars(r)} contains invalid reference `{ref}`")
+                print_failure(f"Run {vars(r)} contains invalid reference `{ref}`")
 
         # Remove items not mentioned in runs:
         used_model_names = {x.model_name for x in self.cfg.runs}  # Names of models used in any run
