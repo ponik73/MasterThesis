@@ -154,7 +154,7 @@ class DeviceInterface:
             server_up = False
 
             while (time.time() - start_time < timeout) and (not server_up):
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
                 server_up = is_server_up_call(url=self.url)
 
             if not server_up:
