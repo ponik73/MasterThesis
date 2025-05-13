@@ -1,8 +1,8 @@
 {
     "devices": [
         {
-            "uri": "localhost",
-            "name": "localhost"
+            "uri": "<URI>",
+            "name": "device"
         }
     ],
     "models": [
@@ -57,27 +57,27 @@
     ],
     "runs": [
         {
-            "device_name": "localhost",
+            "device_name": "device",
             "model_name": "mobilenetv1",
             "dataset_name": "mini_imagenet_classification",
             "required_script_paths": {
-                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/mobilenetv1_mini_imagenet_classification.py"
+                "align_target_predicted": "../../test/scripts/parsing/mobilenetv1_mini_imagenet_classification.py"
             }
         },
         {
-            "device_name": "localhost",
+            "device_name": "device",
             "model_name": "deeplabv3",
             "dataset_name": "pascal_voc_2012_semantic_segmentation",
             "required_script_paths": {
-                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/deeplab_segmentation.py"
+                "align_target_predicted": "../../test/scripts/parsing/deeplab_segmentation.py"
             }
         },
         {
-            "device_name": "localhost",
+            "device_name": "device",
             "model_name": "yolov8",
             "dataset_name": "coco2017",
             "required_script_paths": {
-                "align_target_predicted": "/Users/jakubkasem/Documents-MacBookAir/Uni/DP/MasterThesis/test/scripts/parsing/yolo_detection.py"
+                "align_target_predicted": "../../test/scripts/parsing/yolo_detection.py"
             }
         }
     ]

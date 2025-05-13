@@ -1,42 +1,44 @@
 # MasterThesis
 
-Report API and Model Tester steps required. Device API only if you want to check it out.
+This repository contains modules developed for the master’s thesis. The recommended approach for launching services is via Docker. Python-based initialization is also available.
+
+> For the validation experiment: Initialize the Report API, update the provided configuration file (`test/experiment.json`) with the IP address of the embedded device(s), and run the Model Tester script using this configuration.
 
 ## Report API
 
 ### Docker (recommended)
 
-In `src/reportApi` directory:
+Navigate to the `src/reportApi` directory and follow these steps:
 
-1. Build the Docker image
+1. Build the Docker image:
 ```
 docker build --no-cache -t report-api .
 ```
 
-2. Run the image in container
+2. Run the image in container:
 ```
 docker run -d -p 8001:8001 report-api
 ```
 
 ### Python
 
-In `src/reportApi/app` directory:
+Navigate to the `src/reportApi/app` directory and execute the following:
 
-1. Install dependencies
+1. Install the required dependencies:
 ```
 pip install -r ../requirements.txt
 ```
 
-2. Initialize the API
+2. Start the API server:
 ```
 python -m uvicorn main:app --port 8001
 ```
 
 ## Model Tester
 
-In `src/modelTester` directory:
+Navigate to the `src/modelTester` directory:
 
-1. Install dependencies
+1. Install the required dependencies:
 ```
 pip install -r requirements.txt
 ```
@@ -46,67 +48,69 @@ pip install -r requirements.txt
 python modelTester.py --cfg=<PATH>
 ```
 
-The repository contains `test/experiment.json` file which was used during validation experiment.
-To use this file, modify the `<URI>` placeholder to the IP address of the embedded device.
+An example configuration file is provided in `test/experiment.json`, which was used during the validation experiment.
+To use this file, replace the `<URI>` placeholder with the IP address of the embedded device:
 ```
 "devices": [
         {
-            "uri": "localhost",
-            "name": "<URI>"
+            "uri": "<URI>",
+            "name": "device"
         }
     ],
 ```
-Run the orchestrator script with `test/experiment.json` file. In the `src/modelTester` directory:
+To run the script with this configuration, execute the following from the `src/modelTester` directory:
 ```
 python modelTester.py --cfg=../../test/experiment.json
 ```
 
 ## Device API (ak si to chces pustit lokalne)
 
-You don't need to initialize the API, this tutorial is only useful if you want to use Device API as is (the orchestrator script works only with embedded devices).
+> **Note**: Initialization of the Device API is not required unless you wish to explore or test it locally. The orchestrator script is designed to work exclusively with embedded devices.
 
-Initialize the API either via Docker or Python. Once the API is initialized open `localhost:8000/docs` in the browser or sent REST requests via some client.
+Once the Device API is running, access the interactive documentation via http://localhost:8000/docs or send REST requests using a client of your choice.
 
 ### Docker (recommended)
 
-Either build the image locally or use the uploaded image on docker hub.
+You may either build the Docker image locally or pull it from Docker Hub.
 
 #### Building the image
 
 In `src/deviceApi` directory:
 
-1. Build the Docker image
+1. Build the Docker image:
 ```
 docker build --no-cache device-api:latest .
 ```
 
-2. Run the image in container
+2. Run the container:
 ```
 docker run -e SYS_NAME=`uname -n` -d -p 8000:8000 device-api:latest
 ```
 
-#### Accessing the image from Docker Hub
+#### Use pre-built image from Docker Hub
 
-1. Pull the image
+1. Pull the image:
 ```
 docker pull ponik73/device-api
 ```
 
-2. Run the image in container
+2. Run the container:
 ```
 docker run -e SYS_NAME=`uname -n` -d -p 8000:8000 ponik73/device-api
 ```
 
 ### Python
 
-Machine must support `tflite-runtime` package! In `src/deviceApi/app` directory:
+> **Note**: The machine must support the `tflite-runtime` package.
 
-1. Install dependencies
+Navigate to the `src/deviceApi/app` directory:
+
+1. Install the required dependencies:
 ```
 pip install -r ../requirements.txt
 ```
 
-2. Initialize the API
+2. Start the API server:
 ```
 python -m uvicorn main:app --port 8000
 ```

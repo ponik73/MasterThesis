@@ -1,8 +1,0 @@
-.DS_Store
-__pycache__
-venv/
-.vscode
-
-report/app/database.db
-modelTester/reports
-deviceInference/app/model_storage
