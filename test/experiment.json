@@ -2,7 +2,11 @@
     "devices": [
         {
             "uri": "<URI>",
-            "name": "device"
+            "name": "device",
+            "credentials": {
+                "user_name": "",
+                "password": ""
+            }
         }
     ],
     "models": [
@@ -61,7 +65,7 @@
             "model_name": "mobilenetv1",
             "dataset_name": "mini_imagenet_classification",
             "required_script_paths": {
-                "align_target_predicted": "../../test/scripts/parsing/mobilenetv1_mini_imagenet_classification.py"
+                "align_target_predicted": "../../test/scripts/mobilenetv1_mini_imagenet_classification.py"
             }
         },
         {
@@ -69,7 +73,7 @@
             "model_name": "deeplabv3",
             "dataset_name": "pascal_voc_2012_semantic_segmentation",
             "required_script_paths": {
-                "align_target_predicted": "../../test/scripts/parsing/deeplab_segmentation.py"
+                "align_target_predicted": "../../test/scripts/deeplab_segmentation.py"
             }
         },
         {
@@ -77,7 +81,7 @@
             "model_name": "yolov8",
             "dataset_name": "coco2017",
             "required_script_paths": {
-                "align_target_predicted": "../../test/scripts/parsing/yolo_detection.py"
+                "align_target_predicted": "../../test/scripts/yolo_detection.py"
             }
         }
     ]

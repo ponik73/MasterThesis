@@ -13,3 +13,4 @@ pydantic
 pydantic-core
 pydantic-settings
 tqdm
+colorama
