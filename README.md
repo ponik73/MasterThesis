@@ -63,7 +63,7 @@ To run the script with this configuration, execute the following from the `src/m
 python modelTester.py --cfg=../../test/experiment.json
 ```
 
-## Device API (ak si to chces pustit lokalne)
+## Device API
 
 > **Note**: Initialization of the Device API is not required unless you wish to explore or test it locally. The orchestrator script is designed to work exclusively with embedded devices.
 
